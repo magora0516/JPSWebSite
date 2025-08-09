@@ -1,3 +1,5 @@
+console.log('app.js cargado', new Date().toISOString())
+
 // Configura Supabase
 const SUPABASE_URL = 'https://zsavhkkhdhlhwmtxqyon.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXZoa2toZGhsaHdtdHhxeW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3MDU5ODUsImV4cCI6MjA3MDI4MTk4NX0.mecvMpBJDNeebA_bygW3zP_Qwdbp0An-9B8z1WYh59w'
@@ -75,7 +77,11 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
-  await loadAll()
+  
+  console.log('[signIn] antes de loadAll')
+  await loadAll().catch(err => console.error('loadAll fallo en signIn', err))
+  console.log('[signIn] despues de loadAll')
+
 
 }
 async function signIn(){
@@ -130,10 +136,10 @@ async function signOut(){ await supa.auth.signOut(); await refreshSession() }
 
 // Escucha cambios de autenticación
 supa.auth.onAuthStateChange(async (event) => {
-  console.log('auth event:', event)
   await refreshSession()
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    await loadAll()
+    console.log('[auth] trigger loadAll por', event)
+    await loadAll().catch(err => console.error('loadAll fallo en auth', err))
   }
 })
 
@@ -141,42 +147,20 @@ supa.auth.onAuthStateChange(async (event) => {
 
 
 async function loadAll(){
-  console.time('loadAll')
-  try {
-    // Carga en paralelo
-    const [workers, clients, schedules, sessions] = await Promise.all([
-      supaFetchWorkers(),
-      supaFetchClients(),
-      supaFetchSchedules(),
-      supaFetchSessionsToday()
-    ])
-
-    // Actualiza estado
-    state.workers   = workers || []
-    state.clients   = clients || []
-    state.schedules = schedules || []
-
-    // Render en orden para que los selects tengan datos
-    renderWorkers()
-    renderClients()
-    renderSchedules()
-    renderLogs(sessions || [])
-    renderWorkerPanel()
-    startCountdownIfPlanned()
-
-    console.log('loadAll ok', {
-      workers: state.workers.length,
-      clients: state.clients.length,
-      schedules: state.schedules.length,
-      sessions: (sessions||[]).length
-    })
-  } catch (e){
-    console.error('loadAll error', e)
-    alert('Error cargando datos. Revisa la consola.')
-  } finally {
-    console.timeEnd('loadAll')
-  }
+  console.log('[loadAll] inicio')
+  const [workers, clients, schedules, sessions] = await Promise.all([
+    supaFetchWorkers(), supaFetchClients(), supaFetchSchedules(), supaFetchSessionsToday()
+  ])
+  state.workers = workers || []
+  state.clients = clients || []
+  state.schedules = schedules || []
+  renderWorkers(); renderClients(); renderSchedules(); renderLogs(sessions||[]); renderWorkerPanel(); startCountdownIfPlanned()
+  console.log('[loadAll] ok', {w:state.workers.length, c:state.clients.length, s:state.schedules.length})
 }
+window.loadAll = loadAll
+
+window.addEventListener('unhandledrejection', e => { console.error('Unhandled promise rejection:', e.reason) })
+window.addEventListener('error', e => { console.error('Window error:', e.message || e) })
 
 
 
