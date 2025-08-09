@@ -1,13 +1,13 @@
-// Configura Supabase
+// --- Configuración de Supabase ---
 const SUPABASE_URL = 'https://zsavhkkhdhlhwmtxqyon.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXZoa2toZGhsaHdtdHhxeW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3MDU5ODUsImV4cCI6MjA3MDI4MTk4NX0.mecvMpBJDNeebA_bygW3zP_Qwdbp0An-9B8z1WYh59w'
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// Utils
+// --- Utilidades ---
 const $ = (s) => document.querySelector(s)
+const pad = (n) => String(n).padStart(2, '0')
 const fmtDateTime = (d) => new Date(d).toLocaleString()
 const fmtDate = (d) => new Date(d).toISOString().slice(0,10)
-const pad = (n) => String(n).padStart(2, '0')
 const fmtDuration = (ms) => {
   if (!ms || ms < 0) return '—'
   const h = Math.floor(ms / 3600000)
@@ -16,10 +16,14 @@ const fmtDuration = (ms) => {
   return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
 function todayStr(){ return fmtDate(Date.now()) }
-function setToday(){ $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' }) }
+function setToday(){
+  $('#today').textContent = new Date().toLocaleDateString(undefined, {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  })
+}
 function uid(){ return Math.random().toString(36).slice(2,10) }
 
-// Estado
+// --- Estado global ---
 const state = {
   session: null,
   isAdmin: false,
@@ -29,7 +33,7 @@ const state = {
   activeSession: null
 }
 
-// Admin: leer desde tabla admins
+// --- Autenticación y roles ---
 async function isEmailAdmin(email){
   if (!email) return false
   const { data, error } = await supa
@@ -41,32 +45,35 @@ async function isEmailAdmin(email){
   return !!data
 }
 
-// Auth
 async function refreshSession(){
   const { data: { session } } = await supa.auth.getSession()
   state.session = session
   const email = session?.user?.email || ''
   state.isAdmin = await isEmailAdmin(email)
-	$('#authEmail').value = email
-	const logged = !!session
-	$('#authEmail').style.display = logged ? 'none' : 'inline-block'
-	$('#authPwd').style.display   = logged ? 'none' : 'inline-block'
-	$('#btnSignIn').style.display = logged ? 'none' : 'inline-block'
-	$('#btnSignUp').style.display = logged ? 'none' : 'inline-block'
-	$('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
 
-	$('#authInfo').textContent = logged
-	  ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
-	  : 'Entra con correo y contraseña'
+  // Actualiza panel de autenticación
+  $('#authEmail').value = email
+  const logged = !!session
+  $('#authEmail').style.display = logged ? 'none' : 'inline-block'
+  $('#authPwd').style.display   = logged ? 'none' : 'inline-block'
+  $('#btnSignIn').style.display = logged ? 'none' : 'inline-block'
+  $('#btnSignUp').style.display = logged ? 'none' : 'inline-block'
+  $('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
 
-	const tabContainer = document.querySelector('#tabs-container')
-	if (state.isAdmin) {
-	  tabContainer?.classList.remove('hidden')
-	} else {
-	  tabContainer?.classList.add('hidden')
-	}
+  $('#authInfo').textContent = logged
+    ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
+    : 'Entra con correo y contraseña'
 
+  // Tabs solo para admin
+  const tabContainer = document.querySelector('#tabs-container')
+  if (state.isAdmin) {
+    tabContainer?.classList.remove('hidden')
+  } else {
+    tabContainer?.classList.add('hidden')
+  }
 }
+
+// --- Funciones de autenticación ---
 async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
@@ -86,9 +93,11 @@ async function signUp(){
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
 }
 async function signOut(){ await supa.auth.signOut(); await refreshSession() }
+
+// --- Escucha cambios de autenticación ---
 supa.auth.onAuthStateChange((_e, _s) => { refreshSession() })
 
-// API workers
+// --- API: Trabajadores ---
 async function supaFetchWorkers(){
   const { data, error } = await supa.from('workers').select('*').eq('active', true).order('name')
   if (error) { console.warn('supaFetchWorkers', error); return [] }
@@ -104,7 +113,7 @@ async function supaDeleteWorker(id){
   if (error) { alert('No se pudo eliminar el trabajador: ' + error.message) }
 }
 
-// API clients
+// --- API: Clientes ---
 async function supaFetchClients(){
   const { data, error } = await supa.from('clients').select('*').order('name')
   if (error) { console.warn('supaFetchClients', error); return [] }
@@ -120,7 +129,7 @@ async function supaDeleteClient(id){
   if (error) { alert('No se pudo eliminar el cliente: ' + error.message) }
 }
 
-// API schedules
+// --- API: Agendas ---
 async function supaFetchSchedules(){
   const { data, error } = await supa.from('schedules').select('*').order('date', { ascending: true })
   if (error) { console.warn('supaFetchSchedules', error); return [] }
@@ -136,7 +145,7 @@ async function supaDeleteSchedule(id){
   if (error) { alert('No se pudo eliminar la agenda: ' + error.message) }
 }
 
-// API sessions
+// --- API: Sesiones ---
 async function supaFetchSessionsToday(){
   const { data, error } = await supa
     .from('sessions')
@@ -156,7 +165,7 @@ async function supaUpdateSessionEnd(id, end, loc){
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
 
-// Render
+// --- Renderizado de tablas y paneles ---
 function fillWorkerSelects(){
   const opts = ['<option value="">Selecciona</option>'].concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
   $('#workerSel').innerHTML = opts
@@ -231,7 +240,7 @@ function renderWorkerPanel(){
   $('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
 }
 
-// Countdown
+// --- Cuenta regresiva de sesión ---
 let timerHandle = null
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
 function startCountdownIfPlanned(){
@@ -253,7 +262,7 @@ function startCountdownIfPlanned(){
   tick(); timerHandle = setInterval(tick, 1000)
 }
 
-// Geo
+// --- Geolocalización ---
 function ensureGeo(cb){
   if (!navigator.geolocation) { cb(null); return }
   navigator.geolocation.getCurrentPosition(
@@ -263,7 +272,7 @@ function ensureGeo(cb){
   )
 }
 
-// Turno
+// --- Inicio y fin de turno ---
 async function startShift(){
   const workerId = $('#workerSel').value
   const clientId = $('#workerClient').value
@@ -303,7 +312,7 @@ async function stopShift(){
   })
 }
 
-// Tabs y eventos
+// --- Tabs y eventos ---
 function initTabs(){
   $('#tab-worker').addEventListener('click', () => {
     $('#tab-worker').classList.add('active'); $('#tab-admin').classList.remove('active')
@@ -318,6 +327,7 @@ function initTabs(){
   })
 }
 function bindEvents(){
+  // Autenticación
   $('#btnSignIn').addEventListener('click', signIn)
   $('#btnSignUp').addEventListener('click', signUp)
   $('#btnSignOut').addEventListener('click', signOut)
@@ -410,6 +420,7 @@ function bindEvents(){
 
 function initForms(){ $('#schedDate').value = todayStr() }
 
+// --- Inicialización principal ---
 async function init(){
   setToday(); initTabs(); bindEvents(); initForms(); await refreshSession()
   state.workers = await supaFetchWorkers(); renderWorkers()
@@ -418,6 +429,7 @@ async function init(){
   renderLogs(await supaFetchSessionsToday())
 }
 
+// --- Actualización en visibilidad ---
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible'){
     renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
@@ -428,4 +440,5 @@ document.addEventListener('visibilitychange', async () => {
   }
 })
 
+// --- Arranque ---
 init()
