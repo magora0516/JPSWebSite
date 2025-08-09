@@ -136,18 +136,31 @@ supa.auth.onAuthStateChange(async (event) => {
 
 
 
-
 async function loadAll(){
   console.log('[loadAll] inicio')
-  const [workers, clients, schedules, sessions] = await Promise.all([
-    supaFetchWorkers(), supaFetchClients(), supaFetchSchedules(), supaFetchSessionsToday()
-  ])
-  state.workers = workers || []
-  state.clients = clients || []
-  state.schedules = schedules || []
-  renderWorkers(); renderClients(); renderSchedules(); renderLogs(sessions||[]); renderWorkerPanel(); startCountdownIfPlanned()
-  console.log('[loadAll] ok', {w:state.workers.length, c:state.clients.length, s:state.schedules.length})
+  try {
+    const [workers, clients, schedules, sessions] = await Promise.all([
+      supaFetchWorkers(), supaFetchClients(), supaFetchSchedules(), supaFetchSessionsToday()
+    ])
+    state.workers   = workers || []
+    state.clients   = clients || []
+    state.schedules = schedules || []
+
+    try { renderWorkers() }  catch(e){ console.error('[renderWorkers] error', e) }
+    try { renderClients() }  catch(e){ console.error('[renderClients] error', e) }
+    try { renderSchedules() }catch(e){ console.error('[renderSchedules] error', e) }
+    try { renderLogs(sessions||[]) } catch(e){ console.error('[renderLogs] error', e) }
+    try { renderWorkerPanel() }      catch(e){ console.error('[renderWorkerPanel] error', e) }
+    try { startCountdownIfPlanned() }catch(e){ console.error('[countdown] error', e) }
+
+    console.log('[loadAll] ok', {w:state.workers.length, c:state.clients.length, s:state.schedules.length, sess:(sessions||[]).length})
+  } catch (e){
+    console.error('[loadAll] fallo', e)
+  }
 }
+
+
+
 window.loadAll = loadAll
 
 window.addEventListener('unhandledrejection', e => { console.error('Unhandled promise rejection:', e.reason) })
@@ -500,4 +513,5 @@ document.addEventListener('visibilitychange', async () => {
   }
 })
 
-init()
+document.addEventListener('DOMContentLoaded', () => { init() })
+
