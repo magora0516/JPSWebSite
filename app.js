@@ -76,6 +76,7 @@ async function refreshSession(){
 
 
 async function signIn(){
+  console.log('signIn ejecutado')
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
   if (!email || !password){
@@ -405,7 +406,6 @@ function bindEvents(){
     const saved = await supaInsertWorker(w)
     if (!saved) return
     state.workers.push(saved)
-    $('#workerNameNew').value = ''
     renderWorkers()
   })
   $('#workersTable').addEventListener('click', async e => {
