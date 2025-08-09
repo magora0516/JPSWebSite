@@ -49,41 +49,32 @@ async function refreshSession(){
   state.session = session
   const email = session?.user?.email || ''
   state.isAdmin = await isEmailAdmin(email)
-	$('#authEmail').value = email
-	const logged = !!session
-	$('#authEmail').style.display = logged ? 'none' : 'inline-block'
-	$('#authPwd').style.display   = logged ? 'none' : 'inline-block'
-	$('#btnSignIn').style.display = logged ? 'none' : 'inline-block'
-	$('#btnSignUp').style.display = logged ? 'none' : 'inline-block'
-	$('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
 
-	$('#authInfo').textContent = logged
-	  ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
-	  : 'Entra con correo y contraseña'
+  const emailEl = $('#authEmail')
+  const pwdEl   = $('#authPwd')
+  const inEl    = $('#btnSignIn')
+  const upEl    = $('#btnSignUp')
+  const outEl   = $('#btnSignOut')
+  const infoEl  = $('#authInfo')
 
-	const tabContainer = document.querySelector('#tabs-container')
-	if (state.isAdmin) {
-	  tabContainer?.classList.remove('hidden')
-	} else {
-	  tabContainer?.classList.add('hidden')
-	}
+  if (emailEl) emailEl.value = email
+  const logged = !!session
 
+  if (emailEl) emailEl.style.display = logged ? 'none' : 'inline-block'
+  if (pwdEl)   pwdEl.style.display   = logged ? 'none' : 'inline-block'
+  if (inEl)    inEl.style.display    = logged ? 'none' : 'inline-block'
+  if (upEl)    upEl.style.display    = logged ? 'none' : 'inline-block'
+  if (outEl)   outEl.style.display   = logged ? 'inline-block' : 'none'
+
+  if (infoEl) infoEl.textContent = logged
+    ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
+    : 'Entra con correo y contraseña'
+
+  const tabs = document.querySelector('.tabs') || document.querySelector('#tabs-container')
+  if (tabs) tabs.style.display = state.isAdmin ? 'grid' : 'none'
 }
 
-async function signIn(){
-  const email = $('#authEmail').value.trim().toLowerCase()
-  const password = $('#authPwd').value
-  if (!email || !password){ alert('Correo y contraseña'); return }
-  const { error } = await supa.auth.signInWithPassword({ email, password })
-  if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
-  await refreshSession()
-  
-  console.log('[signIn] antes de loadAll')
-  await loadAll().catch(err => console.error('loadAll fallo en signIn', err))
-  console.log('[signIn] despues de loadAll')
 
-
-}
 async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
