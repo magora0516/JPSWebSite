@@ -85,11 +85,14 @@ async function signIn(){
   }
   $('#btnSignIn').disabled = true
   $('#authInfo').textContent = 'Conectando...'
+  console.log('conectando')
   const { error } = await supa.auth.signInWithPassword({ email, password })
+  console.log('se inició sesión')
   $('#btnSignIn').disabled = false
   if (error){
     $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
     return
+    console.log('Se completó inicio')
   }
   $('#authInfo').textContent = 'Sesión iniciada correctamente'
   await refreshSession()
