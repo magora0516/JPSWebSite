@@ -74,6 +74,8 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
+  await loadAll()
+
 }
 
 async function signUp(){
@@ -84,9 +86,29 @@ async function signUp(){
   const { error } = await supa.auth.signUp({ email, password, options:{ emailRedirectTo: window.location.origin } })
   if (error){ alert('No se pudo crear la cuenta: ' + error.message); return }
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
+  await refreshSession()
+  await loadAll()
 }
 async function signOut(){ await supa.auth.signOut(); await refreshSession() }
-supa.auth.onAuthStateChange((_e, _s) => { refreshSession() })
+supa.auth.onAuthStateChange(async (event, _session) => {
+  await refreshSession()
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    await loadAll()
+  }
+  if (event === 'SIGNED_OUT') {
+    // opcional: limpia estado si quieres
+    // state.workers = []; state.clients = []; state.schedules = []; renderWorkers(); renderClients(); renderSchedules();
+  }
+})
+
+
+async function loadAll(){
+  state.workers  = await supaFetchWorkers();  renderWorkers()
+  state.clients  = await supaFetchClients();  renderClients()
+  state.schedules= await supaFetchSchedules();renderSchedules()
+  renderLogs(await supaFetchSessionsToday())
+}
+
 
 // API workers
 async function supaFetchWorkers(){
@@ -410,13 +432,14 @@ function bindEvents(){
 
 function initForms(){ $('#schedDate').value = todayStr() }
 
+
+
 async function init(){
   setToday(); initTabs(); bindEvents(); initForms(); await refreshSession()
-  state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); renderClients()
-  state.schedules = await supaFetchSchedules(); renderSchedules()
-  renderLogs(await supaFetchSessionsToday())
+  // si ya hay sesión al abrir, carga datos
+  if (state.session) await loadAll()
 }
+
 
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible'){
