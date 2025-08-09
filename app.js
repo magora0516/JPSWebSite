@@ -82,13 +82,37 @@ async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
   if (!email || !password){ alert('Correo y contraseña'); return }
+
   $('#btnSignIn').disabled = true
-  const { error } = await supa.auth.signInWithPassword({ email, password })
-  $('#btnSignIn').disabled = false
-  if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
-  await refreshSession()
-  await loadAll()
+  try {
+    const { data, error } = await supa.auth.signInWithPassword({ email, password })
+    console.log('signIn result:', { data, error })
+    if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
+
+    // Confirma que hay sesión
+    const { data: s } = await supa.auth.getSession()
+    console.log('post-login session:', s)
+    if (!s.session){ alert('Inicio de sesión no establecido'); return }
+
+    await refreshSession()
+    await loadAll()
+
+    // Oculta controles de login y muestra tabs si aplica
+    $('#authEmail').style.display = 'none'
+    $('#authPwd').style.display = 'none'
+    $('#btnSignIn').style.display = 'none'
+    $('#btnSignUp').style.display = 'none'
+    $('#btnSignOut').style.display = 'inline-block'
+    // opcional: ir a pestaña Trabajador por defecto
+    document.querySelector('#tab-worker')?.click()
+  } catch (e){
+    console.log('signIn exception:', e)
+    alert('Error inesperado al iniciar sesión')
+  } finally {
+    $('#btnSignIn').disabled = false
+  }
 }
+
 
 
 async function signUp(){
@@ -103,16 +127,13 @@ async function signUp(){
   await loadAll()
 }
 async function signOut(){ await supa.auth.signOut(); await refreshSession() }
-supa.auth.onAuthStateChange(async (event, _session) => {
+
+supa.auth.onAuthStateChange(async (event) => {
+  console.log('auth event:', event)
   await refreshSession()
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    await loadAll()
-  }
-  if (event === 'SIGNED_OUT') {
-    // opcional: limpia estado si quieres
-    // state.workers = []; state.clients = []; state.schedules = []; renderWorkers(); renderClients(); renderSchedules();
-  }
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') await loadAll()
 })
+
 
 
 async function loadAll(){
