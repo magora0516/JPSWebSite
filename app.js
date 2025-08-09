@@ -67,6 +67,7 @@ async function refreshSession(){
 	}
 
 }
+
 async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
@@ -76,6 +77,17 @@ async function signIn(){
   await refreshSession()
   await loadAll()
 
+}
+async function signIn(){
+  const email = $('#authEmail').value.trim().toLowerCase()
+  const password = $('#authPwd').value
+  if (!email || !password){ alert('Correo y contraseña'); return }
+  $('#btnSignIn').disabled = true
+  const { error } = await supa.auth.signInWithPassword({ email, password })
+  $('#btnSignIn').disabled = false
+  if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
+  await refreshSession()
+  await loadAll()
 }
 
 async function signUp(){
@@ -343,6 +355,27 @@ function bindEvents(){
   $('#btnSignIn').addEventListener('click', signIn)
   $('#btnSignUp').addEventListener('click', signUp)
   $('#btnSignOut').addEventListener('click', signOut)
+
+
+  const btnIn = document.getElementById('btnSignIn')
+  if (btnIn){
+    btnIn.addEventListener('click', async (e) => {
+      e.preventDefault()
+      try { await signIn() } catch(err){ console.log('signIn error', err) }
+    })
+  }
+
+  const btnUp = document.getElementById('btnSignUp')
+  if (btnUp){
+    btnUp.addEventListener('click', async (e) => {
+      e.preventDefault()
+      try { await signUp() } catch(err){ console.log('signUp error', err) }
+    })
+  }
+
+  document.getElementById('btnSignOut')?.addEventListener('click', signOut)
+
+
 
   // Workers
   $('#btnAddWorker').addEventListener('click', async () => {
