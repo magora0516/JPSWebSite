@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Registro de horas – Limpieza</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Registro de horas. Limpieza</h1>
+      <div class="muted" id="today"></div>
+      <div class="card" style="margin-top:12px">
+        <div class="auth">
+		  <input id="authEmail" type="email" placeholder="Tu correo" />
+		  <input id="authPwd" type="password" placeholder="Contraseña" />
+		  <button class="primary" id="btnSignIn">Entrar</button>
+		  <button class="ghost" id="btnSignUp">Crear cuenta</button>
+		  <button class="ghost" id="btnSignOut" style="display:none">Cerrar sesión</button>
+		  <div id="authInfo" class="muted" style="grid-column:1/-1"></div>
+		</div>
+
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="tabs" id="tabs-container">
+      <div class="tab active" id="tab-worker">Trabajador</div>
+      <div class="tab" id="tab-admin">Administrador</div>
+    </div>
+    <div class="spacer"></div>
+
+    <section id="worker" class="grid two">
+      <div class="card">
+        <div class="grid">
+          <div>
+            <label>Trabajador</label>
+            <select id="workerSel"></select>
+          </div>
+          <div>
+            <label>Cliente</label>
+            <select id="workerClient"></select>
+          </div>
+          <div class="grid two">
+            <button class="ok" id="btnStart">Iniciar turno</button>
+            <button class="danger" id="btnStop" disabled>Finalizar turno</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid">
+          <div class="row"><div class="muted">Estado</div><div class="stat" id="state">Libre</div></div>
+          <div class="row"><div class="muted">Inicio</div><div id="startAt">—</div></div>
+          <div class="row"><div class="muted">Fin</div><div id="endAt">—</div></div>
+          <div class="row"><div class="muted">Duración</div><div id="duration">—</div></div>
+          <div class="row"><div class="muted">Ubicación inicio</div><div id="locStart">—</div></div>
+          <div class="row"><div class="muted">Ubicación fin</div><div id="locEnd">—</div></div>
+          <div class="row"><div class="muted">Cuenta regresiva</div><div class="timer" id="countdown">00:00:00</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin" class="grid two" style="display:none">
+      <div class="card">
+        <h3>Trabajadores</h3>
+        <div class="grid">
+          <div>
+            <label>Nombre del trabajador</label>
+            <input id="workerNameNew" placeholder="Ejemplo. Ana Pérez" />
+          </div>
+          <button class="primary" id="btnAddWorker">Agregar trabajador</button>
+        </div>
+        <div class="spacer"></div>
+        <table class="list" id="workersTable">
+          <thead><tr><th>Nombre</th><th>Acción</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Clientes</h3>
+        <div class="grid">
+          <div>
+            <label>Nombre del cliente</label>
+            <input id="clientName" placeholder="Ejemplo. Banco Central" />
+          </div>
+          <div>
+            <label>Ubicación del cliente</label>
+            <input id="clientLocation" placeholder="Dirección o referencia" />
+          </div>
+          <button class="primary" id="btnAddClient">Agregar cliente</button>
+        </div>
+        <div class="spacer"></div>
+        <table class="list" id="clientsTable">
+          <thead><tr><th>Cliente</th><th>Ubicación</th><th>Acción</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Agenda</h3>
+        <div class="grid">
+          <div class="two grid">
+            <div>
+              <label>Fecha</label>
+              <input type="date" id="schedDate" />
+            </div>
+            <div>
+              <label>Trabajador</label>
+              <select id="schedWorkerSel"></select>
+            </div>
+          </div>
+          <div>
+            <label>Cliente</label>
+            <select id="schedClient"></select>
+          </div>
+          <div>
+            <label>Tiempo estimado en minutos</label>
+            <input type="number" id="schedMinutes" min="5" step="5" value="60" />
+          </div>
+          <button class="primary" id="btnSchedule">Programar visita</button>
+        </div>
+        <div class="spacer"></div>
+        <table class="list" id="schedTable">
+          <thead><tr><th>Fecha</th><th>Trabajador</th><th>Cliente</th><th>Estimado</th><th>Acción</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <h3>Registros de hoy</h3>
+        <table class="list" id="logsTable">
+          <thead><tr><th>Trabajador</th><th>Cliente</th><th>Inicio</th><th>Fin</th><th>Duración</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
