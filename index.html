@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <!-- Metadatos y recursos -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Registro de horas – Limpieza</title>
@@ -8,32 +9,40 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+  <!-- Encabezado principal -->
   <header>
     <div class="container">
       <h1>Registro de horas. Limpieza</h1>
       <div class="muted" id="today"></div>
+      <!-- Tarjeta de autenticación de usuario -->
       <div class="card" style="margin-top:12px">
         <div class="auth">
-		  <input id="authEmail" type="email" placeholder="Tu correo" />
-		  <input id="authPwd" type="password" placeholder="Contraseña" />
-		  <button class="primary" id="btnSignIn">Entrar</button>
-		  <button class="ghost" id="btnSignUp">Crear cuenta</button>
-		  <button class="ghost" id="btnSignOut" style="display:none">Cerrar sesión</button>
-		  <div id="authInfo" class="muted" style="grid-column:1/-1"></div>
-		</div>
-
+          <!-- Inputs para autenticación -->
+          <input id="authEmail" type="email" placeholder="Tu correo" />
+          <input id="authPwd" type="password" placeholder="Contraseña" />
+          <!-- Botones de autenticación -->
+          <button class="primary" id="btnSignIn">Entrar</button>
+          <button class="ghost" id="btnSignUp">Crear cuenta</button>
+          <button class="ghost" id="btnSignOut" style="display:none">Cerrar sesión</button>
+          <!-- Mensaje de información de autenticación -->
+          <div id="authInfo" class="muted" style="grid-column:1/-1"></div>
+        </div>
       </div>
     </div>
   </header>
 
+  <!-- Contenido principal -->
   <main class="container">
+    <!-- Navegación por pestañas -->
     <div class="tabs" id="tabs-container">
       <div class="tab active" id="tab-worker">Trabajador</div>
       <div class="tab" id="tab-admin">Administrador</div>
     </div>
     <div class="spacer"></div>
 
+    <!-- Sección para trabajadores -->
     <section id="worker" class="grid two">
+      <!-- Tarjeta de inicio de turno -->
       <div class="card">
         <div class="grid">
           <div>
@@ -46,25 +55,35 @@
           </div>
           <div class="grid two">
             <button class="ok" id="btnStart">Iniciar turno</button>
-            <button class="danger" id="btnStop" disabled>Finalizar turno</button>
           </div>
         </div>
       </div>
 
+      <!-- Tarjeta de estado del turno -->
       <div class="card">
         <div class="grid">
-          <div class="row"><div class="muted">Estado</div><div class="stat" id="state">Libre</div></div>
+          <!-- Estado actual del trabajador -->
+          <div class="row">
+            <div class="muted">Estado</div>
+            <div class="stat" id="state">Libre</div>
+          </div>
+          <!-- Horarios y ubicaciones -->
           <div class="row"><div class="muted">Inicio</div><div id="startAt">—</div></div>
           <div class="row"><div class="muted">Fin</div><div id="endAt">—</div></div>
           <div class="row"><div class="muted">Duración</div><div id="duration">—</div></div>
           <div class="row"><div class="muted">Ubicación inicio</div><div id="locStart">—</div></div>
           <div class="row"><div class="muted">Ubicación fin</div><div id="locEnd">—</div></div>
           <div class="row"><div class="muted">Cuenta regresiva</div><div class="timer" id="countdown">00:00:00</div></div>
+          <div style="margin-top:12px;">
+            <button class="danger" id="btnStop" disabled>Finalizar servicio</button>
+          </div>
         </div>
       </div>
     </section>
 
+    <!-- Sección para administradores -->
     <section id="admin" class="grid two" style="display:none">
+      <!-- Gestión de trabajadores -->
       <div class="card">
         <h3>Trabajadores</h3>
         <div class="grid">
@@ -81,6 +100,7 @@
         </table>
       </div>
 
+      <!-- Gestión de clientes -->
       <div class="card">
         <h3>Clientes</h3>
         <div class="grid">
@@ -101,6 +121,7 @@
         </table>
       </div>
 
+      <!-- Programación de agenda -->
       <div class="card">
         <h3>Agenda</h3>
         <div class="grid">
@@ -131,6 +152,7 @@
         </table>
       </div>
 
+      <!-- Registros del día -->
       <div class="card" style="grid-column: 1 / -1">
         <h3>Registros de hoy</h3>
         <table class="list" id="logsTable">
@@ -141,6 +163,7 @@
     </section>
   </main>
 
+  <!-- Scripts principales -->
   <script src="app.js"></script>
 </body>
 </html>
