@@ -128,20 +128,56 @@ async function signUp(){
 }
 async function signOut(){ await supa.auth.signOut(); await refreshSession() }
 
+// Escucha cambios de autenticación
 supa.auth.onAuthStateChange(async (event) => {
   console.log('auth event:', event)
   await refreshSession()
-  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') await loadAll()
+  if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+    await loadAll()
+  }
 })
 
 
 
+
 async function loadAll(){
-  state.workers  = await supaFetchWorkers();  renderWorkers()
-  state.clients  = await supaFetchClients();  renderClients()
-  state.schedules= await supaFetchSchedules();renderSchedules()
-  renderLogs(await supaFetchSessionsToday())
+  console.time('loadAll')
+  try {
+    // Carga en paralelo
+    const [workers, clients, schedules, sessions] = await Promise.all([
+      supaFetchWorkers(),
+      supaFetchClients(),
+      supaFetchSchedules(),
+      supaFetchSessionsToday()
+    ])
+
+    // Actualiza estado
+    state.workers   = workers || []
+    state.clients   = clients || []
+    state.schedules = schedules || []
+
+    // Render en orden para que los selects tengan datos
+    renderWorkers()
+    renderClients()
+    renderSchedules()
+    renderLogs(sessions || [])
+    renderWorkerPanel()
+    startCountdownIfPlanned()
+
+    console.log('loadAll ok', {
+      workers: state.workers.length,
+      clients: state.clients.length,
+      schedules: state.schedules.length,
+      sessions: (sessions||[]).length
+    })
+  } catch (e){
+    console.error('loadAll error', e)
+    alert('Error cargando datos. Revisa la consola.')
+  } finally {
+    console.timeEnd('loadAll')
+  }
 }
+
 
 
 // API workers
@@ -470,11 +506,13 @@ function initForms(){ $('#schedDate').value = todayStr() }
 
 
 
+// Inicializa la aplicación
 async function init(){
-  setToday(); initTabs(); bindEvents(); initForms(); await refreshSession()
-  // si ya hay sesión al abrir, carga datos
+  setToday(); initTabs(); bindEvents(); initForms();
+  await refreshSession()
   if (state.session) await loadAll()
 }
+
 
 
 document.addEventListener('visibilitychange', async () => {
