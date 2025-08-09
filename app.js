@@ -87,7 +87,7 @@ async function signIn(){
   $('#btnSignIn').disabled = false
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
-  await loadAll()
+  //await loadAll()
 }
 
 async function signUp(){
