@@ -78,36 +78,21 @@ async function refreshSession(){
 async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
-  if (!email || !password){ alert('Correo y contraseña'); return }
-
-  $('#btnSignIn').disabled = true
-  try {
-    const { data, error } = await supa.auth.signInWithPassword({ email, password })
-    console.log('signIn result:', { data, error })
-    if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
-
-    // Confirma que hay sesión
-    const { data: s } = await supa.auth.getSession()
-    console.log('post-login session:', s)
-    if (!s.session){ alert('Inicio de sesión no establecido'); return }
-
-    await refreshSession()
-    await loadAll()
-
-    // Oculta controles de login y muestra tabs si aplica
-    $('#authEmail').style.display = 'none'
-    $('#authPwd').style.display = 'none'
-    $('#btnSignIn').style.display = 'none'
-    $('#btnSignUp').style.display = 'none'
-    $('#btnSignOut').style.display = 'inline-block'
-    // opcional: ir a pestaña Trabajador por defecto
-    document.querySelector('#tab-worker')?.click()
-  } catch (e){
-    console.log('signIn exception:', e)
-    alert('Error inesperado al iniciar sesión')
-  } finally {
-    $('#btnSignIn').disabled = false
+  if (!email || !password){
+    $('#authInfo').textContent = 'Correo y contraseña requeridos'
+    return
   }
+  $('#btnSignIn').disabled = true
+  $('#authInfo').textContent = 'Conectando...'
+  const { error } = await supa.auth.signInWithPassword({ email, password })
+  $('#btnSignIn').disabled = false
+  if (error){
+    $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
+    return
+  }
+  $('#authInfo').textContent = 'Sesión iniciada correctamente'
+  await refreshSession()
+  await loadAll()
 }
 
 
@@ -398,8 +383,14 @@ function initTabs(){
   })
 }
 function bindEvents(){
-  $('#btnSignIn').addEventListener('click', signIn)
-  $('#btnSignUp').addEventListener('click', signUp)
+  $('#btnSignIn').addEventListener('click', async (e) => {
+    e.preventDefault()
+    await signIn()
+  })
+  $('#btnSignUp').addEventListener('click', async (e) => {
+    e.preventDefault()
+    await signUp()
+  })
   $('#btnSignOut').addEventListener('click', signOut)
 
 
