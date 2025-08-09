@@ -86,17 +86,23 @@ async function signIn(){
   $('#btnSignIn').disabled = true
   $('#authInfo').textContent = 'Conectando...'
   console.log('conectando')
-  const { error } = await supa.auth.signInWithPassword({ email, password })
-  console.log('se inició sesión')
-  $('#btnSignIn').disabled = false
-  if (error){
-    $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
-    return
-    console.log('Se completó inicio')
+  try {
+    const { error, data } = await supa.auth.signInWithPassword({ email, password })
+    console.log('se inició sesión')
+    $('#btnSignIn').disabled = false
+    if (error){
+      $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
+      console.error('Supabase error:', error)
+      return
+    }
+    $('#authInfo').textContent = 'Sesión iniciada correctamente'
+    await refreshSession()
+    await loadAll()
+  } catch (e) {
+    $('#btnSignIn').disabled = false
+    $('#authInfo').textContent = 'Error de conexión o Supabase: ' + (e.message || e)
+    console.error('Catch error:', e)
   }
-  $('#authInfo').textContent = 'Sesión iniciada correctamente'
-  await refreshSession()
-  await loadAll()
 }
 
 
