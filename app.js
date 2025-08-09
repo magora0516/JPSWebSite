@@ -357,25 +357,6 @@ function bindEvents(){
   $('#btnSignOut').addEventListener('click', signOut)
 
 
-  const btnIn = document.getElementById('btnSignIn')
-  if (btnIn){
-    btnIn.addEventListener('click', async (e) => {
-      e.preventDefault()
-      try { await signIn() } catch(err){ console.log('signIn error', err) }
-    })
-  }
-
-  const btnUp = document.getElementById('btnSignUp')
-  if (btnUp){
-    btnUp.addEventListener('click', async (e) => {
-      e.preventDefault()
-      try { await signUp() } catch(err){ console.log('signUp error', err) }
-    })
-  }
-
-  document.getElementById('btnSignOut')?.addEventListener('click', signOut)
-
-
 
   // Workers
   $('#btnAddWorker').addEventListener('click', async () => {
