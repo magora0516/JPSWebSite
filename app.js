@@ -78,7 +78,7 @@ async function signIn(){
   await loadAll()
 
 }
-/* async function signIn(){
+async function signIn(){
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
   if (!email || !password){ alert('Correo y contraseña'); return }
@@ -86,27 +86,10 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   $('#btnSignIn').disabled = false
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
-  //await refreshSession()
-  //await loadAll()
-} */
-
-async function signIn(){
-  const email = $('#authEmail').value.trim().toLowerCase()
-  const password = $('#authPwd').value
-  if (!email || !password){
-    $('#authInfo').textContent = 'Correo y contraseña requeridos'
-    return
-  }
-  $('#authInfo').textContent = 'Conectando...'
-  const { error } = await supa.auth.signInWithPassword({ email, password })
-  if (error){
-    $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
-    return
-  }
-  $('#authInfo').textContent = 'Sesión iniciada correctamente'
   await refreshSession()
   await loadAll()
 }
+
 
 async function signUp(){
   const email = $('#authEmail').value.trim().toLowerCase()
