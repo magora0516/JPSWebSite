@@ -1,27 +1,33 @@
+// --- app.js: Registro de horas Limpieza ---
+// Inicialización y configuración global
 console.log('app.js cargado', new Date().toISOString())
 
-// Configura Supabase
+// --- Supabase ---
 const SUPABASE_URL = 'https://zsavhkkhdhlhwmtxqyon.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXZoa2toZGhsaHdtdHhxeW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3MDU5ODUsImV4cCI6MjA3MDI4MTk4NX0.mecvMpBJDNeebA_bygW3zP_Qwdbp0An-9B8z1WYh59w'
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-// Utils
-const $ = (s) => document.querySelector(s)
-const fmtDateTime = (d) => new Date(d).toLocaleString()
-const fmtDate = (d) => new Date(d).toISOString().slice(0,10)
-const pad = (n) => String(n).padStart(2, '0')
-const fmtDuration = (ms) => {
+// --- Utilidades ---
+const $ = s => document.querySelector(s)
+const pad = n => String(n).padStart(2, '0')
+const fmtDateTime = d => new Date(d).toLocaleString()
+const fmtDate = d => new Date(d).toISOString().slice(0,10)
+const fmtDuration = ms => {
   if (!ms || ms < 0) return '—'
   const h = Math.floor(ms / 3600000)
   const m = Math.floor((ms % 3600000) / 60000)
   const s = Math.floor((ms % 60000) / 1000)
   return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
-function todayStr(){ return fmtDate(Date.now()) }
-function setToday(){ $('#today').textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' }) }
-function uid(){ return Math.random().toString(36).slice(2,10) }
+function todayStr() { return fmtDate(Date.now()) }
+function setToday() {
+  $('#today').textContent = new Date().toLocaleDateString(undefined, {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  })
+}
+function uid() { return Math.random().toString(36).slice(2,10) }
 
-// Estado
+// --- Estado global ---
 const state = {
   session: null,
   isAdmin: false,
@@ -31,25 +37,25 @@ const state = {
   activeSession: null
 }
 
-// Admin: leer desde tabla admins
-async function isEmailAdmin(email){
+// --- Autenticación y roles ---
+async function isEmailAdmin(email) {
   if (!email) return false
   const { data, error } = await supa
     .from('admins')
     .select('email')
     .eq('email', email.toLowerCase())
     .maybeSingle()
-  if (error){ console.warn('admin check', error); return false }
+  if (error) { console.warn('admin check', error); return false }
   return !!data
 }
 
-// Auth
-async function refreshSession(){
+async function refreshSession() {
   const { data: { session } } = await supa.auth.getSession()
   state.session = session
   const email = session?.user?.email || ''
   state.isAdmin = await isEmailAdmin(email)
 
+  // Actualiza panel de autenticación
   const emailEl = $('#authEmail')
   const pwdEl   = $('#authPwd')
   const inEl    = $('#btnSignIn')
@@ -70,27 +76,25 @@ async function refreshSession(){
     ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
     : 'Entra con correo y contraseña'
 
+  // Tabs solo para admin
   const tabs = document.querySelector('.tabs') || document.querySelector('#tabs-container')
   if (tabs) tabs.style.display = state.isAdmin ? 'grid' : 'none'
 }
 
-
-async function signIn(){
-  console.log('signIn ejecutado')
+// --- Funciones de autenticación ---
+async function signIn() {
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
-  if (!email || !password){
+  if (!email || !password) {
     $('#authInfo').textContent = 'Correo y contraseña requeridos'
     return
   }
   $('#btnSignIn').disabled = true
   $('#authInfo').textContent = 'Conectando...'
-  console.log('conectando')
   try {
-    const { error, data } = await supa.auth.signInWithPassword({ email, password })
-    console.log('se inició sesión')
+    const { error } = await supa.auth.signInWithPassword({ email, password })
     $('#btnSignIn').disabled = false
-    if (error){
+    if (error) {
       $('#authInfo').textContent = 'No se pudo iniciar sesión: ' + error.message
       console.error('Supabase error:', error)
       return
@@ -105,34 +109,45 @@ async function signIn(){
   }
 }
 
-
-
-async function signUp(){
+async function signUp() {
   const email = $('#authEmail').value.trim().toLowerCase()
   const password = $('#authPwd').value
-  if (!email || !password){ alert('Correo y contraseña'); return }
-  if (password.length < 6){ alert('Mínimo 6 caracteres'); return }
-  const { error } = await supa.auth.signUp({ email, password, options:{ emailRedirectTo: window.location.origin } })
-  if (error){ alert('No se pudo crear la cuenta: ' + error.message); return }
+  if (!email || !password) {
+    alert('Correo y contraseña requeridos')
+    return
+  }
+  if (password.length < 6) {
+    alert('La contraseña debe tener al menos 6 caracteres')
+    return
+  }
+  const { error } = await supa.auth.signUp({
+    email, password,
+    options: { emailRedirectTo: window.location.origin }
+  })
+  if (error) {
+    alert('No se pudo crear la cuenta: ' + error.message)
+    return
+  }
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
   await refreshSession()
   await loadAll()
 }
-async function signOut(){ await supa.auth.signOut(); await refreshSession() }
 
-// Escucha cambios de autenticación
+async function signOut() {
+  await supa.auth.signOut()
+  await refreshSession()
+}
+
+// --- Escucha cambios de autenticación ---
 supa.auth.onAuthStateChange(async (event) => {
   await refreshSession()
   if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-    console.log('[auth] trigger loadAll por', event)
     await loadAll().catch(err => console.error('loadAll fallo en auth', err))
   }
 })
 
-
-
-async function loadAll(){
-  console.log('[loadAll] inicio')
+// --- Carga de datos principales ---
+async function loadAll() {
   try {
     const [workers, clients, schedules, sessions] = await Promise.all([
       supaFetchWorkers(), supaFetchClients(), supaFetchSchedules(), supaFetchSessionsToday()
@@ -141,78 +156,64 @@ async function loadAll(){
     state.clients   = clients || []
     state.schedules = schedules || []
 
-    try { renderWorkers() }  catch(e){ console.error('[renderWorkers] error', e) }
-    try { renderClients() }  catch(e){ console.error('[renderClients] error', e) }
-    try { renderSchedules() }catch(e){ console.error('[renderSchedules] error', e) }
-    try { renderLogs(sessions||[]) } catch(e){ console.error('[renderLogs] error', e) }
-    try { renderWorkerPanel() }      catch(e){ console.error('[renderWorkerPanel] error', e) }
-    try { startCountdownIfPlanned() }catch(e){ console.error('[countdown] error', e) }
-
-    console.log('[loadAll] ok', {w:state.workers.length, c:state.clients.length, s:state.schedules.length, sess:(sessions||[]).length})
-  } catch (e){
+    renderWorkers()
+    renderClients()
+    renderSchedules()
+    renderLogs(sessions || [])
+    renderWorkerPanel()
+    startCountdownIfPlanned()
+  } catch (e) {
     console.error('[loadAll] fallo', e)
   }
 }
 
-
-
-window.loadAll = loadAll
-
-window.addEventListener('unhandledrejection', e => { console.error('Unhandled promise rejection:', e.reason) })
-window.addEventListener('error', e => { console.error('Window error:', e.message || e) })
-
-
-
-// API workers
-async function supaFetchWorkers(){
+// --- API Supabase: CRUD ---
+async function supaFetchWorkers() {
   const { data, error } = await supa.from('workers').select('*').eq('active', true).order('name')
   if (error) { console.warn('supaFetchWorkers', error); return [] }
   return data || []
 }
-async function supaInsertWorker(w){
+async function supaInsertWorker(w) {
   const { data, error } = await supa.from('workers').insert(w).select().single()
-  if (error) { console.log('workers insert error', error); alert('No se pudo guardar el trabajador: ' + error.message); return null }
+  if (error) { alert('No se pudo guardar el trabajador: ' + error.message); return null }
   return data
 }
-async function supaDeleteWorker(id){
+async function supaDeleteWorker(id) {
   const { error } = await supa.from('workers').delete().eq('id', id)
   if (error) { alert('No se pudo eliminar el trabajador: ' + error.message) }
 }
 
-// API clients
-async function supaFetchClients(){
+async function supaFetchClients() {
   const { data, error } = await supa.from('clients').select('*').order('name')
   if (error) { console.warn('supaFetchClients', error); return [] }
   return data || []
 }
-async function supaInsertClient(client){
+async function supaInsertClient(client) {
   const { data, error } = await supa.from('clients').insert(client).select().single()
   if (error) { alert('No se pudo guardar el cliente: ' + error.message); return null }
   return data
 }
-async function supaDeleteClient(id){
+async function supaDeleteClient(id) {
   const { error } = await supa.from('clients').delete().eq('id', id)
   if (error) { alert('No se pudo eliminar el cliente: ' + error.message) }
 }
 
-// API schedules
-async function supaFetchSchedules(){
+async function supaFetchSchedules() {
   const { data, error } = await supa.from('schedules').select('*').order('date', { ascending: true })
   if (error) { console.warn('supaFetchSchedules', error); return [] }
   return data || []
 }
-async function supaInsertSchedule(s){
+async function supaInsertSchedule(s) {
   const { data, error } = await supa.from('schedules').insert(s).select().single()
-  if (error) { console.log('schedules insert error', error); alert('No se pudo guardar la agenda: ' + error.message); return null }
+  if (error) { alert('No se pudo guardar la agenda: ' + error.message); return null }
   return data
 }
-async function supaDeleteSchedule(id){
+async function supaDeleteSchedule(id) {
   const { error } = await supa.from('schedules').delete().eq('id', id)
   if (error) { alert('No se pudo eliminar la agenda: ' + error.message) }
 }
 
-// API sessions
-async function supaFetchSessionsToday(){
+async function supaFetchSessionsToday() {
   const { data, error } = await supa
     .from('sessions')
     .select('*')
@@ -221,23 +222,28 @@ async function supaFetchSessionsToday(){
   if (error) { console.warn('supaFetchSessionsToday', error); return [] }
   return data || []
 }
-async function supaInsertSession(s){
+async function supaInsertSession(s) {
   const { data, error } = await supa.from('sessions').insert(s).select().single()
   if (error) { alert('No se pudo iniciar la sesión: ' + error.message); return null }
   return data
 }
-async function supaUpdateSessionEnd(id, end, loc){
-  const { error } = await supa.from('sessions').update({ end_at:end, loc_end_lat:loc?.lat, loc_end_lng:loc?.lng }).eq('id', id)
+async function supaUpdateSessionEnd(id, end, loc) {
+  const { error } = await supa.from('sessions').update({
+    end_at: end,
+    loc_end_lat: loc?.lat,
+    loc_end_lng: loc?.lng
+  }).eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
 
-// Render
-function fillWorkerSelects(){
-  const opts = ['<option value="">Selecciona</option>'].concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
+// --- Renderizado de tablas y paneles ---
+function fillWorkerSelects() {
+  const opts = ['<option value="">Selecciona</option>']
+    .concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
   $('#workerSel').innerHTML = opts
   $('#schedWorkerSel').innerHTML = opts
 }
-function renderWorkers(){
+function renderWorkers() {
   fillWorkerSelects()
   const tbody = $('#workersTable tbody')
   tbody.innerHTML = ''
@@ -247,7 +253,7 @@ function renderWorkers(){
     tbody.appendChild(tr)
   })
 }
-function renderClients(){
+function renderClients() {
   const tbody = $('#clientsTable tbody')
   tbody.innerHTML = ''
   state.clients.forEach(c => {
@@ -255,11 +261,12 @@ function renderClients(){
     tr.innerHTML = `<td>${c.name}</td><td>${c.location||''}</td><td><button class="ghost" data-id="${c.id}">Eliminar</button></td>`
     tbody.appendChild(tr)
   })
-  const clientOpts = ['<option value="">Selecciona un cliente</option>'].concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
+  const clientOpts = ['<option value="">Selecciona un cliente</option>']
+    .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
   $('#workerClient').innerHTML = clientOpts
   $('#schedClient').innerHTML = clientOpts
 }
-function renderSchedules(){
+function renderSchedules() {
   const tbody = $('#schedTable tbody')
   tbody.innerHTML = ''
   state.schedules.forEach(s => {
@@ -271,7 +278,7 @@ function renderSchedules(){
     tbody.appendChild(tr)
   })
 }
-function renderLogs(sessions){
+function renderLogs(sessions) {
   const tbody = $('#logsTable tbody')
   tbody.innerHTML = ''
   sessions.forEach(s => {
@@ -283,11 +290,11 @@ function renderLogs(sessions){
     tbody.appendChild(tr)
   })
 }
-function renderWorkerPanel(){
+function renderWorkerPanel() {
   const a = state.activeSession
   $('#btnStart').disabled = !!a
   $('#btnStop').disabled = !a
-  if (!a){
+  if (!a) {
     $('#state').textContent = 'Libre'
     $('#startAt').textContent = '—'
     $('#endAt').textContent = '—'
@@ -306,10 +313,10 @@ function renderWorkerPanel(){
   $('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
 }
 
-// Countdown
+// --- Cuenta regresiva de sesión ---
 let timerHandle = null
-function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
-function startCountdownIfPlanned(){
+function clearTimer() { if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
+function startCountdownIfPlanned() {
   clearTimer()
   const a = state.activeSession
   if (!a) { $('#countdown').textContent = '00:00:00'; return }
@@ -320,7 +327,7 @@ function startCountdownIfPlanned(){
   )
   if (!plan) { $('#countdown').textContent = '00:00:00'; return }
   const endTarget = new Date(a.start_at).getTime() + plan.minutes * 60000
-  function tick(){
+  function tick() {
     const left = endTarget - Date.now()
     $('#countdown').textContent = fmtDuration(Math.max(left, 0))
     if (left <= 0) $('#countdown').style.color = 'var(--warn)'; else $('#countdown').style.color = 'inherit'
@@ -328,8 +335,8 @@ function startCountdownIfPlanned(){
   tick(); timerHandle = setInterval(tick, 1000)
 }
 
-// Geo
-function ensureGeo(cb){
+// --- Geolocalización ---
+function ensureGeo(cb) {
   if (!navigator.geolocation) { cb(null); return }
   navigator.geolocation.getCurrentPosition(
     pos => cb({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -338,12 +345,12 @@ function ensureGeo(cb){
   )
 }
 
-// Turno
-async function startShift(){
+// --- Inicio y fin de turno ---
+async function startShift() {
   const workerId = $('#workerSel').value
   const clientId = $('#workerClient').value
-  if (!workerId){ alert('Selecciona un trabajador'); return }
-  if (!clientId){ alert('Selecciona un cliente'); return }
+  if (!workerId) { alert('Selecciona un trabajador'); return }
+  if (!clientId) { alert('Selecciona un cliente'); return }
   const worker = state.workers.find(w => w.id === workerId)
   ensureGeo(async loc => {
     const session = {
@@ -363,7 +370,7 @@ async function startShift(){
     const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
   })
 }
-async function stopShift(){
+async function stopShift() {
   const a = state.activeSession
   if (!a) return
   ensureGeo(async loc => {
@@ -378,8 +385,8 @@ async function stopShift(){
   })
 }
 
-// Tabs y eventos
-function initTabs(){
+// --- Tabs y eventos ---
+function initTabs() {
   $('#tab-worker').addEventListener('click', () => {
     $('#tab-worker').classList.add('active'); $('#tab-admin').classList.remove('active')
     $('#worker').style.display='grid'; $('#admin').style.display='none'
@@ -392,7 +399,7 @@ function initTabs(){
     renderLogs(await supaFetchSessionsToday())
   })
 }
-function bindEvents(){
+function bindEvents() {
   $('#btnSignIn').addEventListener('click', async (e) => {
     e.preventDefault()
     await signIn()
@@ -402,8 +409,6 @@ function bindEvents(){
     await signUp()
   })
   $('#btnSignOut').addEventListener('click', signOut)
-
-
 
   // Workers
   $('#btnAddWorker').addEventListener('click', async () => {
@@ -490,19 +495,19 @@ function bindEvents(){
   $('#btnStop').addEventListener('click', stopShift)
 }
 
-function initForms(){ $('#schedDate').value = todayStr() }
+function initForms() { $('#schedDate').value = todayStr() }
 
-
-
-// Inicializa la aplicación
-async function init(){
-  setToday(); initTabs(); bindEvents(); initForms();
+// --- Inicialización principal ---
+async function init() {
+  setToday()
+  initTabs()
+  bindEvents()
+  initForms()
   await refreshSession()
   if (state.session) await loadAll()
 }
 
-
-
+// --- Actualización en visibilidad ---
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible'){
     renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
@@ -513,5 +518,10 @@ document.addEventListener('visibilitychange', async () => {
   }
 })
 
+// --- Arranque ---
 document.addEventListener('DOMContentLoaded', () => { init() })
+
+// --- Manejo de errores globales ---
+window.addEventListener('unhandledrejection', e => { console.error('Unhandled promise rejection:', e.reason) })
+window.addEventListener('error', e => { console.error('Window error:', e.message || e) })
 
