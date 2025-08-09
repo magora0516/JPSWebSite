@@ -71,6 +71,19 @@ async function refreshSession(){
   } else {
     tabContainer?.classList.add('hidden')
   }
+
+  // --- NUEVO: Cargar o limpiar listas según sesión ---
+  if (logged) {
+    state.workers = await supaFetchWorkers()
+    state.clients = await supaFetchClients()
+    fillWorkerSelects()
+    renderClients()
+  } else {
+    state.workers = []
+    state.clients = []
+    fillWorkerSelects()
+    renderClients()
+  }
 }
 
 // --- Funciones de autenticación ---
@@ -92,7 +105,15 @@ async function signUp(){
   if (error){ alert('No se pudo crear la cuenta: ' + error.message); return }
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
 }
-async function signOut(){ await supa.auth.signOut(); await refreshSession() }
+async function signOut(){
+  await supa.auth.signOut()
+  // --- NUEVO: Limpiar listas al cerrar sesión ---
+  state.workers = []
+  state.clients = []
+  fillWorkerSelects()
+  renderClients()
+  await refreshSession()
+}
 
 // --- Escucha cambios de autenticación ---
 supa.auth.onAuthStateChange((_e, _s) => { refreshSession() })
