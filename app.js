@@ -119,7 +119,7 @@ async function signOut(){
   await refreshSession()
 }
 
-async function supaFetchActiveSession() {
+async function fetchUserActiveSession() {
   if (!state.session?.user?.email) {
     console.warn('No hay usuario en sesión')
     return null
