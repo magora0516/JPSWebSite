@@ -62,10 +62,6 @@ async function refreshSession(){
   $('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
 
 
-  //Prueba de log para verificar el clientId
-    const clientId = $('#schedClient').value
-    console.log('ClientID es:', clientId)
-
   $('#authInfo').textContent = logged
     ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
     : 'Entra con correo y contraseña'
@@ -73,6 +69,12 @@ async function refreshSession(){
   // Mostrar u ocultar el contenido principal según sesión
   const mainContent = document.getElementById('mainContent')
   if (mainContent) mainContent.style.display = logged ? 'block' : 'none'
+
+
+  //Prueba de log para verificar el clientId
+    const clientId = $('#schedClient').value
+    console.log('ClientID es:', clientId)
+
 
   // Tabs solo para admin
   const tabContainer = document.querySelector('#tabs-container')
