@@ -189,6 +189,7 @@ async function supaInsertSession(s){
   return data
 }
 async function supaUpdateSessionEnd(id, end, loc){
+  console.log('Actualizando sesión', id, 'con fin en', end, 'y loc', loc)
   const { error } = await supa.from('sessions').update({ end_at:end, loc_end_lat:loc?.lat, loc_end_lng:loc?.lng }).eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
