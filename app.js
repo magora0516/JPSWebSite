@@ -81,11 +81,7 @@ async function refreshSession(){
 
 
   /* // --- NUEVO: Cargar o limpiar listas según sesión ---
-  if (logged) {
-    state.workers = await supaFetchWorkers()
-    state.clients = await supaFetchClients()
-    fillWorkerSelects()
-    renderClients()
+
 
     
   //Prueba de log para verificar el clientId
@@ -140,6 +136,11 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
+  // --- NUEVO: Cargar listas al iniciar sesión ---
+    state.workers = await supaFetchWorkers()
+    state.clients = await supaFetchClients()
+    fillWorkerSelects()
+    renderClients()
 }
 
 async function signUp(){
