@@ -389,6 +389,7 @@ async function stopShift(){
   if (!a) return
   ensureGeo(async loc => {
     const end = new Date().toISOString()
+    console.log('Finalizando sesión', a.id, 'a las', end, 'con loc', loc)
     await supaUpdateSessionEnd(a.id, end, loc)
     a.end_at = end
     a.loc_end_lat = loc?.lat || null
