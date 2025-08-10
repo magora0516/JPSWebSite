@@ -115,6 +115,7 @@ async function signIn(){
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
 
   if (state.session){
+    console.log('buscando usuario ', state.session.user.email)
     await ensureCurrentWorker()
   }
 
