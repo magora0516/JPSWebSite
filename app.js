@@ -449,10 +449,10 @@ function bindEvents(){
     if (!state.isAdmin){ alert('Solo admin'); return }
     const date = $('#schedDate').value || todayStr()
     const workerId = $('#schedWorkerSel').value
+    console.log('Texto visible:', workerID)
     const clientId = $('#schedClient').value
     const minutes = parseInt($('#schedMinutes').value, 10) || 60
-  console.log('Valor (value):', clientId)
-  console.log('Texto visible:', workerID)
+    console.log('Valor (value):', clientId)
 
     if (!workerId) { alert('Selecciona un trabajador'); return }
     if (!clientId) { alert('Selecciona un cliente'); return }
