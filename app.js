@@ -518,6 +518,7 @@ async function init(){
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
+  renderWorkerPanel(); startCountdownIfPlanned(); 
   renderLogs(await supaFetchSessionsToday())
 
   console.log('Pagina recargada')
