@@ -50,9 +50,9 @@ function applyRoleUI(){
    const tabs = document.getElementById('tabs-container')
   if (tabs) tabs.classList.toggle('hidden', !state.isAdmin)
 
-  /*// ocultar select de trabajador en la vista del trabajador para no-admin
+  // ocultar select de trabajador en la vista del trabajador para no-admin
   const workerSelectWrap = document.querySelector('label+select#workerSel')?.parentElement
-  if (workerSelectWrap) workerSelectWrap.style.display = state.isAdmin ? 'block' : 'none'
+  /*if (workerSelectWrap) workerSelectWrap.style.display = state.isAdmin ? 'block' : 'none'
  */}
 
 async function refreshSession(){
