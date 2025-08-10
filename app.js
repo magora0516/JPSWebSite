@@ -98,10 +98,10 @@ async function signIn(){
   renderWorkers()
   state.clients = await supaFetchClients()
   renderClients()
-  if (state.session) {
+/*   if (state.session) {
     state.activeSession = await getActiveSessionForCurrentUser();
     console.log('Sesión activa encontrada:', state.activeSession);
-  } 
+  }  */
 
 }
 
