@@ -333,7 +333,7 @@ function startCountdownIfPlanned(){
     ((s.worker_id && a.worker_id && s.worker_id === a.worker_id) ||
      (!s.worker_id && s.worker && a.worker && s.worker.toLowerCase() === a.worker.toLowerCase()))
   ) */
-    console.log('Intento de conteo',a.date, a.client_id, plan.client_id)
+    console.log('Intento de conteo',a.date, a.client_id)
   if (!plan) { $('#countdown').textContent = '00:00:00'; return }
   console.log('Se encontró plan:', plan.client_id)
   const endTarget = new Date(a.start_at).getTime() + plan.minutes * 60000
