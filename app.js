@@ -103,9 +103,7 @@ async function signIn(){
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
 
-  if (state.session){
-    await ensureCurrentWorker()
-}
+
 
 
 
@@ -116,6 +114,9 @@ async function signIn(){
 
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
 
+  if (state.session){
+    await ensureCurrentWorker()
+  }
 
 }
 
