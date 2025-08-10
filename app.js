@@ -312,7 +312,12 @@ let timerHandle = null
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
 function startCountdownIfPlanned(){
   clearTimer()
+  console.log('Intento de conteo')
   const a = state.activeSession
+  if (!a) {console.log('No hay sesión activa, no se inicia cuenta regresiva')}
+  else {console.log('Sesión activa')}
+
+
   if (!a) { $('#countdown').textContent = '00:00:00'; return }
   const plan = state.schedules.find(s =>
     s.date === a.date && s.client_id === a.client_id &&
