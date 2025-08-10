@@ -119,19 +119,28 @@ async function signOut(){
   await refreshSession()
 }
 
-async function fetchUserActiveSession() {
-  const email = state.session?.user?.email;
-  if (!email) return null;
-  // Busca la sesión activa del usuario actual (sin end_at)
+async function supaFetchActiveSession() {
+  if (!state.session?.user?.email) {
+    console.warn('No hay usuario en sesión')
+    return null
+  }
+
   const { data, error } = await supa
     .from('sessions')
     .select('*')
-    .eq('worker_email', email)
+    .eq('worker_id', state.session.user.id) // O usa worker_id si lo guardas así
     .is('end_at', null)
-    .maybeSingle();
-  if (error) { console.warn('fetchUserActiveSession', error); return null; }
-  return data;
+    .limit(1)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error buscando sesión activa', error)
+    return null
+  }
+
+  return data
 }
+
 
 async function loadActiveSession() {
   // Obtiene la sesión activa del usuario actual
