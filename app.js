@@ -80,7 +80,7 @@ async function refreshSession(){
 
 
 
-  // --- NUEVO: Cargar o limpiar listas según sesión ---
+  /* // --- NUEVO: Cargar o limpiar listas según sesión ---
   if (logged) {
     state.workers = await supaFetchWorkers()
     state.clients = await supaFetchClients()
@@ -129,7 +129,7 @@ async function refreshSession(){
     state.activeSession = null
     renderWorkerPanel()
     clearTimer()
-  }
+  } */
 }
 
 // --- Funciones de autenticación ---
