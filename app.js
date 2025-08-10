@@ -97,10 +97,10 @@ async function signIn(){
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
-  state.workers = await supaFetchWorkers()
-  renderWorkers()
-  state.clients = await supaFetchClients()
-  renderClients()
+  state.workers = await supaFetchWorkers(); renderWorkers()
+  state.clients = await supaFetchClients(); renderClients()
+  state.schedules = await supaFetchSchedules(); renderSchedules()
+
   renderWorkerPanel(); startCountdownIfPlanned()
 
 
