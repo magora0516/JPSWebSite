@@ -79,7 +79,7 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
-applyRoleUI()
+  applyRoleUI()
 
 
   
