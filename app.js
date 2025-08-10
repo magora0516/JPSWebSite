@@ -81,7 +81,6 @@ async function refreshSession(){
 
   if (state.session) {
     state.activeSession = await getActiveSessionForCurrentUser();
-    renderWorkerPanel(); startCountdownIfPlanned()
     console.log('Sesión activa encontrada:', state.activeSession);
   }  
 
@@ -102,6 +101,7 @@ async function signIn(){
   renderWorkers()
   state.clients = await supaFetchClients()
   renderClients()
+  renderWorkerPanel(); startCountdownIfPlanned()
 
 
 }
