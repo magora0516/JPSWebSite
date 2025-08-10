@@ -62,12 +62,12 @@ async function refreshSession(){
   $('#btnSignUp').style.display = logged ? 'none' : 'inline-block'
   $('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
 
-
+  // Actualiza información de autenticación
   $('#authInfo').textContent = logged
     ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
     : 'Entra con correo y contraseña'
 
-  // Mostrar u ocultar el contenido principal según sesión
+  // Mostrar u ocultar el contenido principal (panel de ingreso de credenciales) según sesión
   const mainContent = document.getElementById('mainContent')
   if (mainContent) mainContent.style.display = logged ? 'block' : 'none'
 
@@ -79,10 +79,7 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
-  if (state.session) {
-    state.activeSession = await getActiveSessionForCurrentUser();
-    console.log('Sesión activa encontrada:', state.activeSession.worker);
-  }  
+
 
 
   
@@ -101,7 +98,7 @@ async function signIn(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
-  renderWorkerPanel(); startCountdownIfPlanned()
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
 
 
 }
@@ -312,6 +309,13 @@ let timerHandle = null
 
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
 
+async function isSessionActiveForUser() {
+    if (state.session) {
+    state.activeSession = await getActiveSessionForCurrentUser();
+    console.log('Sesión activa encontrada') }  
+  
+}
+
 function startCountdownIfPlanned(){
   clearTimer()
 
@@ -518,7 +522,7 @@ async function init(){
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
-  renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
   renderLogs(await supaFetchSessionsToday())
 
   console.log('Pagina recargada')
