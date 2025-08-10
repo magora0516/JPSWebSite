@@ -137,7 +137,7 @@ async function fetchUserActiveSession() {
     console.error('Error buscando sesión activa', error)
     return null
   }
-console.error('datos encontrados')
+console.log('datos encontrados')
   return data
 }
 
