@@ -141,7 +141,7 @@ async function ensureCurrentWorker(){
     
     
     const { data: byEmail } = await supa.from('workers').select('id,name,email,user_id').eq('email', email).maybeSingle()
-      console.log('usuario encontrado ', byemail)
+      console.log('usuario encontrado ', byEmail)
     if (byEmail && !byEmail.user_id){
       console.log('actualizando usuario ', email)
       const { data: patched } = await supa.from('workers').update({ user_id: uid }).eq('id', byEmail.id)
