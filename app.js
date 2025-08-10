@@ -312,10 +312,10 @@ let timerHandle = null
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
 function startCountdownIfPlanned(){
   clearTimer()
-  console.log('Intento de conteo')
+
   const a = state.activeSession
-  if (!a) {console.log('No hay sesión activa, no se inicia cuenta regresiva')}
-  else {console.log('Sesión activa')}
+/*   if (!a) {console.log('No hay sesión activa, no se inicia cuenta regresiva')}
+  else {console.log('Sesión activa')} */
 
 
   if (!a) { $('#countdown').textContent = '00:00:00'; return }
@@ -324,6 +324,7 @@ function startCountdownIfPlanned(){
     ((s.worker_id && a.worker_id && s.worker_id === a.worker_id) ||
      (!s.worker_id && s.worker && a.worker && s.worker.toLowerCase() === a.worker.toLowerCase()))
   )
+    console.log('Intento de conteo')
   if (!plan) { $('#countdown').textContent = '00:00:00'; return }
   const endTarget = new Date(a.start_at).getTime() + plan.minutes * 60000
   function tick(){
