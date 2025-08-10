@@ -230,13 +230,13 @@ async function supaDeleteSchedule(id){
 }
 
 // --- API: Sesiones ---
-async function supaFetchSessionsToday(){
+async function supaFetchSessions7Days(){
   const { data, error } = await supa
     .from('sessions')
     .select('*')
     .eq('date', todayStr())
     .order('start_at', { ascending: false })
-  if (error) { console.warn('supaFetchSessionsToday', error); return [] }
+  if (error) { console.warn('supaFetchSessions7Days', error); return [] }
   return data || []
 }
 async function supaInsertSession(s){
@@ -446,33 +446,6 @@ function ensureGeo(cb){
   )
 }
 
-/* // --- Inicio y fin de turno ---
-async function startShift(){
-  await refreshSession()
-  const workerId = $('#workerSel').value
-  const clientId = $('#workerClient').value
-  if (!workerId){ alert('Selecciona un trabajador'); return }
-  if (!clientId){ alert('Selecciona un cliente'); return }
-  const worker = state.workers.find(w => w.id === workerId)
-  ensureGeo(async loc => {
-    const session = {
-      id: uid(),
-      worker: worker.name,
-      worker_id: worker.id,
-      client_id: clientId,
-      date: todayStr(),
-      start_at: new Date().toISOString(), end_at: null,
-      loc_start_lat: loc?.lat || null, loc_start_lng: loc?.lng || null,
-      loc_end_lat: null, loc_end_lng: null
-    }
-    const saved = await supaInsertSession(session)
-    const finalS = saved || session
-    state.activeSession = finalS
-    renderWorkerPanel(); startCountdownIfPlanned()
-    const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
-  })
-} */
-
 async function startShift(){
   await refreshSession()
   const clientId = $('#workerClient').value
@@ -508,7 +481,7 @@ async function startShift(){
     const finalS = saved || session
     state.activeSession = finalS
     renderWorkerPanel(); startCountdownIfPlanned()
-    const todaySessions = await supaFetchSessionsToday();
+    const todaySessions = await supaFetchSessions7Days();
     renderLogs(todaySessions)
   })
 }
@@ -526,7 +499,7 @@ async function stopShift(){
     a.loc_end_lng = loc?.lng || null
     state.activeSession = null
     renderWorkerPanel(); clearTimer()
-    const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
+    const todaySessions = await supaFetchSessions7Days(); renderLogs(todaySessions)
   })
 }
 
@@ -541,7 +514,7 @@ function initTabs(){
     if (!state.isAdmin){ alert('Acceso solo para administradores'); return }
     $('#tab-admin').classList.add('active'); $('#tab-worker').classList.remove('active')
     $('#worker').style.display='none'; $('#admin').style.display='grid'
-    renderLogs(await supaFetchSessionsToday())
+    renderLogs(await supaFetchSessions7Days())
   })
 }
 function bindEvents(){
@@ -600,7 +573,7 @@ function bindEvents(){
       await supaDeleteClient(id)
       state.clients = state.clients.filter(c => c.id !== id)
       state.schedules = state.schedules.filter(s => s.client_id !== id)
-      renderClients(); renderSchedules(); renderLogs(await supaFetchSessionsToday())
+      renderClients(); renderSchedules(); renderLogs(await supaFetchSessions7Days())
     }
   })
 
@@ -654,7 +627,7 @@ async function init(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
-  renderLogs(await supaFetchSessionsToday())
+  renderLogs(await supaFetchSessions7Days())
 
   console.log('Pagina recargada')
 }
@@ -666,7 +639,7 @@ document.addEventListener('visibilitychange', async () => {
     state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
-    renderLogs(await supaFetchSessionsToday())
+    renderLogs(await supaFetchSessions7Days())
     console.log('Página visible, actualizando datos...')
   } 
 })
