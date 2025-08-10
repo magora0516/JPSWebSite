@@ -231,12 +231,27 @@ async function supaDeleteSchedule(id){
 
 // --- API: Sesiones ---
 async function supaFetchSessions7Days(){
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  // Formato YYYY-MM-DD
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+  
+  const { data, error } = await supa
+    .from('sessions')
+    .select('*')
+    .gte('date', sevenDaysAgoStr) // mayor o igual que hace 7 días
+    .order('start_at', { ascending: false })
+  if (error) { console.warn('supaFetchSessions7Days', error); return [] }
+  return data || []
+}
+async function supaFetchSessionsToday(){
   const { data, error } = await supa
     .from('sessions')
     .select('*')
     .eq('date', todayStr())
     .order('start_at', { ascending: false })
-  if (error) { console.warn('supaFetchSessions7Days', error); return [] }
+  if (error) { console.warn('supaFetchSessionsToday', error); return [] }
   return data || []
 }
 async function supaInsertSession(s){
