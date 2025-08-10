@@ -79,7 +79,7 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
-
+applyRoleUI()
 
 
   
@@ -93,6 +93,21 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
+
+  if (state.session){
+    await ensureCurrentWorker()
+    await loadAll()
+}
+
+function applyRoleUI(){
+  const tabs = document.getElementById('tabs-container')
+  if (tabs) tabs.classList.toggle('hidden', !state.isAdmin)
+
+  // ocultar select de trabajador en la vista del trabajador para no-admin
+  const workerSelectWrap = document.querySelector('label+select#workerSel')?.parentElement
+  if (workerSelectWrap) workerSelectWrap.style.display = state.isAdmin ? 'block' : 'none'
+}
+
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
@@ -112,6 +127,40 @@ async function signUp(){
   if (error){ alert('No se pudo crear la cuenta: ' + error.message); return }
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
 }
+
+
+async function ensureCurrentWorker(){
+  if (!state.session?.user) return null
+  const uid = state.session.user.id
+  const email = state.session.user.email?.toLowerCase()
+
+  // intenta por user_id primero
+  let { data: worker } = await supa.from('workers').select('id,name,email,user_id').eq('user_id', uid).maybeSingle()
+  if (worker) { state.currentWorker = worker; return worker }
+
+  // si no existe pero hay fila por email, la vinculas
+  if (email){
+    const { data: byEmail } = await supa.from('workers').select('id,name,email,user_id').eq('email', email).maybeSingle()
+    if (byEmail && !byEmail.user_id){
+      const { data: patched } = await supa.from('workers').update({ user_id: uid }).eq('id', byEmail.id).select().maybeSingle()
+      state.currentWorker = patched || byEmail
+      return state.currentWorker
+    }
+  }
+
+  // si no existe ninguno, lo creas
+  const name = email?.split('@')[0] || 'Trabajador'
+  const newW = { id: uidGen(), name, email, user_id: uid, active: true }
+  const { data: created, error } = await supa.from('workers').insert(newW).select().maybeSingle()
+  if (error){ console.warn('crear worker fallo', error); return null }
+  state.currentWorker = created
+  return created
+
+  function uidGen(){ return Math.random().toString(36).slice(2,10) }
+}
+
+
+
 async function signOut(){
   await supa.auth.signOut()
   // --- NUEVO: Limpiar listas al cerrar sesión ---
@@ -390,8 +439,9 @@ function ensureGeo(cb){
   )
 }
 
-// --- Inicio y fin de turno ---
+/* // --- Inicio y fin de turno ---
 async function startShift(){
+  await refreshSession()
   const workerId = $('#workerSel').value
   const clientId = $('#workerClient').value
   if (!workerId){ alert('Selecciona un trabajador'); return }
@@ -414,7 +464,49 @@ async function startShift(){
     renderWorkerPanel(); startCountdownIfPlanned()
     const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
   })
+} */
+
+async function startShift(){
+  await refreshSession()
+  const clientId = $('#workerClient').value
+  if (!clientId){ alert('Selecciona un cliente'); return }
+
+  let worker // decide el worker según rol
+  if (state.isAdmin){
+    const workerId = $('#workerSel').value
+    if (!workerId){ alert('Selecciona un trabajador'); return }
+    worker = state.workers.find(w => w.id === workerId)
+  } else {
+    if (!state.currentWorker){ await ensureCurrentWorker() }
+    worker = state.currentWorker
+  }
+  if (!worker){ alert('Trabajador inválido'); return }
+
+  ensureGeo(async loc => {
+    const session = {
+      id: uid(),
+      worker: worker.name,
+      worker_id: worker.id,           // RLS depende de esto
+      client_id: clientId,
+      date: todayStr(),
+      start_at: new Date().toISOString(),
+      end_at: null,
+      loc_start_lat: loc?.lat ?? null,
+      loc_start_lng: loc?.lng ?? null,
+      loc_end_lat: null,
+      loc_end_lng: null
+    }
+    const saved = await supaInsertSession(session)
+
+    const finalS = saved || session
+    state.activeSession = finalS
+    renderWorkerPanel(); startCountdownIfPlanned()
+    const todaySessions = await supaFetchSessionsToday();
+    renderLogs(todaySessions)
+  })
 }
+
+
 async function stopShift(){
   const a = state.activeSession
   if (!a) return
