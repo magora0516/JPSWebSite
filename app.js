@@ -188,11 +188,41 @@ async function supaInsertSession(s){
   if (error) { alert('No se pudo iniciar la sesión: ' + error.message); return null }
   return data
 }
-async function supaUpdateSessionEnd(id, end, loc){
+/* async function supaUpdateSessionEnd(id, end, loc){
   console.log('Actualizando sesión', id, 'con fin en', end, 'y loc', loc)
   const { error } = await supa.from('sessions').update({ end_at:end, loc_end_lat:loc?.lat, loc_end_lng:loc?.lng }).eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
+} */
+
+async function supaUpdateSessionEnd(id, end, loc){
+  console.log('Actualizando sesión', id, 'fin', end, 'loc', loc)
+  try {
+    const { data, error, status } = await supa
+      .from('sessions')
+      .update({
+        end_at: end,
+        loc_end_lat: loc?.lat ?? null,
+        loc_end_lng: loc?.lng ?? null
+      })
+      .eq('id', id)
+      .is('end_at', null)   // no cerrar si ya estaba cerrada
+      .select()
+      .single()
+
+    if (error){
+      console.error('sessions.update error', { status, error })
+      alert('No se pudo finalizar la sesión: ' + (error.message || ''))
+      return null
+    }
+    console.log('sessions.update ok', data)
+    return data
+  } catch (e){
+    console.error('sessions.update exception', e)
+    alert('Error inesperado al finalizar la sesión')
+    return null
+  }
 }
+
 
 async function getActiveSessionForCurrentUser() {
   if (!state.session?.user?.email) return null;
