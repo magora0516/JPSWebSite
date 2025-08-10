@@ -79,10 +79,7 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
-  if (state.session) {
-  state.activeSession = await getActiveSessionForCurrentUser();
-  console.log('Sesión activa encontrada:', state.activeSession);
-}
+
 
 
   
@@ -101,6 +98,10 @@ async function signIn(){
   renderWorkers()
   state.clients = await supaFetchClients()
   renderClients()
+  /* if (state.session) {
+    state.activeSession = await getActiveSessionForCurrentUser();
+    console.log('Sesión activa encontrada:', state.activeSession);
+  } */
 
 }
 
