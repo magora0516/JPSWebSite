@@ -309,7 +309,9 @@ function renderWorkerPanel(){
 
 // --- Cuenta regresiva de sesión ---
 let timerHandle = null
+
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
+
 function startCountdownIfPlanned(){
   clearTimer()
 
@@ -319,13 +321,20 @@ function startCountdownIfPlanned(){
 
 
   if (!a) { $('#countdown').textContent = '00:00:00'; return }
+  // Buscar si hay un plan para la sesión activa
+  // (basado en fecha, cliente y trabajador)
   const plan = state.schedules.find(s =>
+    s.date === a.date && s.client_id === a.client_id
+     )
+  
+  /* const plan = state.schedules.find(s =>
     s.date === a.date && s.client_id === a.client_id &&
     ((s.worker_id && a.worker_id && s.worker_id === a.worker_id) ||
      (!s.worker_id && s.worker && a.worker && s.worker.toLowerCase() === a.worker.toLowerCase()))
-  )
+  ) */
     console.log('Intento de conteo')
   if (!plan) { $('#countdown').textContent = '00:00:00'; return }
+  console.log('Se encontró plan:', plan.client_id)
   const endTarget = new Date(a.start_at).getTime() + plan.minutes * 60000
   function tick(){
     const left = endTarget - Date.now()
