@@ -505,7 +505,7 @@ async function init(){
 // --- Actualización en visibilidad ---
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible'){
-    //renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
+    renderWorkerPanel(); startCountdownIfPlanned(); //await refreshSession()
     state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
