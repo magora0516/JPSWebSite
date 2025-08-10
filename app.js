@@ -51,9 +51,6 @@ async function refreshSession(){
   const email = session?.user?.email || ''
   state.isAdmin = await isEmailAdmin(email)
 
-  //Prueba de log para verificar el clientId
-    const clientId = $('#schedClient').value
-    console.log('ClientID es:', clientId)
 
   // Actualiza panel de autenticación
   $('#authEmail').value = email
@@ -63,6 +60,11 @@ async function refreshSession(){
   $('#btnSignIn').style.display = logged ? 'none' : 'inline-block'
   $('#btnSignUp').style.display = logged ? 'none' : 'inline-block'
   $('#btnSignOut').style.display= logged ? 'inline-block' : 'none'
+
+
+  //Prueba de log para verificar el clientId
+    const clientId = $('#schedClient').value
+    console.log('ClientID es:', clientId)
 
   $('#authInfo').textContent = logged
     ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
