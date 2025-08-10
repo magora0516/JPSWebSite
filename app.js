@@ -506,10 +506,10 @@ async function init(){
 document.addEventListener('visibilitychange', async () => {
    if (document.visibilityState === 'visible'){
     renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
-    state.workers = await supaFetchWorkers(); renderWorkers()
+    /* state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
-    renderLogs(await supaFetchSessionsToday())
+    renderLogs(await supaFetchSessionsToday()) */
     console.log('Página visible, actualizando datos...')
   } 
 })
