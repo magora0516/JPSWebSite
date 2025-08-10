@@ -80,14 +80,7 @@ async function refreshSession(){
 
 
 
-  /* // --- NUEVO: Cargar o limpiar listas según sesión ---
-
-
-    
-  //Prueba de log para verificar el clientId
-    const clientId = $('#schedClient').value
-    console.log('ClientID es:', clientId)
-
+  /*
 
     // Buscar último turno activo del usuario y mostrarlo
     const userEmail = session?.user?.email
@@ -136,11 +129,11 @@ async function signIn(){
   const { error } = await supa.auth.signInWithPassword({ email, password })
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
-  // --- NUEVO: Cargar listas al iniciar sesión ---
-    state.workers = await supaFetchWorkers()
-    state.clients = await supaFetchClients()
-    fillWorkerSelects()
-    renderClients()
+  // --- Cargar listas y actualizar panel tras iniciar sesión ---
+  state.workers = await supaFetchWorkers()
+  renderWorkers()
+  state.clients = await supaFetchClients()
+  renderClients()
 }
 
 async function signUp(){
