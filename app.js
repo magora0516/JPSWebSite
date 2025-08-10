@@ -81,6 +81,7 @@ async function refreshSession(){
 
   if (state.session) {
     state.activeSession = await getActiveSessionForCurrentUser();
+    renderWorkerPanel(); startCountdownIfPlanned()
     console.log('Sesión activa encontrada:', state.activeSession);
   }  
 
@@ -283,8 +284,10 @@ function renderLogs(sessions){
 }
 function renderWorkerPanel(){
   const a = state.activeSession
+  // Actualizar botones y estado
   $('#btnStart').disabled = !!a
   $('#btnStop').disabled = !a
+
   if (!a){
     $('#state').textContent = 'Libre'
     $('#startAt').textContent = '—'
@@ -506,10 +509,10 @@ async function init(){
 document.addEventListener('visibilitychange', async () => {
    if (document.visibilityState === 'visible'){
     renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
-    /* state.workers = await supaFetchWorkers(); renderWorkers()
+    state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
-    renderLogs(await supaFetchSessionsToday()) */
+    renderLogs(await supaFetchSessionsToday())
     console.log('Página visible, actualizando datos...')
   } 
 })
