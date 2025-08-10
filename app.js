@@ -510,6 +510,7 @@ document.addEventListener('visibilitychange', async () => {
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
     renderLogs(await supaFetchSessionsToday())
+    console.log('Página visible, actualizando datos...')
   }
 })
 
