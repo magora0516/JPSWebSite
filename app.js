@@ -514,11 +514,11 @@ function initForms(){ $('#schedDate').value = todayStr() }
 
 // --- Inicialización principal ---
 async function init(){
-  setToday(); initTabs(); bindEvents(); initForms(); await refreshSession()
+  setToday(); initTabs(); bindEvents(); initForms(); 
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
-  renderWorkerPanel(); startCountdownIfPlanned(); 
+  renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
   renderLogs(await supaFetchSessionsToday())
 
   console.log('Pagina recargada')
