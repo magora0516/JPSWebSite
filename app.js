@@ -64,6 +64,10 @@ async function refreshSession(){
     ? `Conectado como ${email}${state.isAdmin ? ' · Administrador' : ''}`
     : 'Entra con correo y contraseña'
 
+  // Mostrar u ocultar el contenido principal según sesión
+  const mainContent = document.getElementById('mainContent')
+  if (mainContent) mainContent.style.display = logged ? 'block' : 'none'
+
   // Tabs solo para admin
   const tabContainer = document.querySelector('#tabs-container')
   if (state.isAdmin) {
