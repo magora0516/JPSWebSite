@@ -103,10 +103,6 @@ async function signIn(){
   if (error){ alert('No se pudo iniciar sesión: ' + error.message); return }
   await refreshSession()
 
-
-
-
-
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
@@ -130,6 +126,22 @@ async function signUp(){
   const { error } = await supa.auth.signUp({ email, password, options:{ emailRedirectTo: window.location.origin } })
   if (error){ alert('No se pudo crear la cuenta: ' + error.message); return }
   $('#authInfo').textContent = 'Cuenta creada. Revisa tu correo si requiere confirmación.'
+
+ await refreshSession()
+
+  // --- Cargar listas y actualizar panel tras iniciar sesión ---
+  state.workers = await supaFetchWorkers(); renderWorkers()
+  state.clients = await supaFetchClients(); renderClients()
+  state.schedules = await supaFetchSchedules(); renderSchedules()
+
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
+
+  if (state.session){
+    console.log('Verificacion de usuario')
+    await ensureCurrentWorker()
+    
+  }
+
 }
 
 
