@@ -70,12 +70,6 @@ async function refreshSession(){
   const mainContent = document.getElementById('mainContent')
   if (mainContent) mainContent.style.display = logged ? 'block' : 'none'
 
-
-  //Prueba de log para verificar el clientId
-    const clientId = $('#schedClient').value
-    console.log('ClientID es:', clientId)
-
-
   // Tabs solo para admin
   const tabContainer = document.querySelector('#tabs-container')
   if (state.isAdmin) {
@@ -83,6 +77,12 @@ async function refreshSession(){
   } else {
     tabContainer?.classList.add('hidden')
   }
+
+
+  //Prueba de log para verificar el clientId
+    const clientId = $('#schedClient').value
+    console.log('ClientID es:', clientId)
+
 
   // --- NUEVO: Cargar o limpiar listas según sesión ---
   if (logged) {
