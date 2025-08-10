@@ -137,9 +137,7 @@ async function ensureCurrentWorker(){
   const email = state.session.user.email?.toLowerCase()
 
   // si no existe pero hay fila por email, la vinculas
-  if (email){
-    
-    
+  if (email){    
     const { data: byEmail } = await supa.from('workers').select('id,name,email,user_id').eq('email', email).maybeSingle()
       console.log('usuario encontrado ', byEmail)
     if (byEmail && !byEmail.user_id){
@@ -148,20 +146,8 @@ async function ensureCurrentWorker(){
       state.currentWorker = patched || byEmail
       return state.currentWorker
     }
-
-
-    
+   
   }
-
-  // si no existe ninguno, lo creas
-  const name = email?.split('@')[0] || 'Trabajador'
-  const newW = { id: uidGen(), name, email, user_id: uid, active: true }
-  const { data: created, error } = await supa.from('workers').insert(newW).select().maybeSingle()
-  if (error){ console.warn('crear worker fallo', error); return null }
-  state.currentWorker = created
-  return created
-
-  function uidGen(){ return Math.random().toString(36).slice(2,10) }
 }
 
 
