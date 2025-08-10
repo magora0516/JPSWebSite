@@ -419,16 +419,14 @@ function bindEvents(){
   // Clients
   $('#btnAddClient').addEventListener('click', async () => {
     await refreshSession()
-    if (!state.isAdmin){ return }
+    if (!state.isAdmin){ alert('Solo admin'); return }
     const name = $('#clientName').value.trim()
     const location = $('#clientLocation').value.trim()
-    if (!name){ alert('Nombre requerido'); return }
-    if (!location){ alert('Ubicación requerida'); return }
-    const client = { id: uid(), name, location }
-    const saved = await supaInsertClient(client)
+    if (!name) { alert('Escribe el nombre del cliente'); return }
+    const newClient = { id: uid(), name, location }
+    const saved = await supaInsertClient(newClient)
     if (!saved) return
     state.clients.push(saved)
-        // Limpiar campos solo si se guardó correctamente
     $('#clientName').value = ''
     $('#clientLocation').value = ''
     renderClients()
