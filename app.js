@@ -82,11 +82,43 @@ async function refreshSession(){
     state.clients = await supaFetchClients()
     fillWorkerSelects()
     renderClients()
+
+    // Buscar último turno activo del usuario y mostrarlo
+    const userEmail = session?.user?.email
+    let activeSession = null
+    if (userEmail) {
+      // Buscar el trabajador por email si existe en la tabla workers
+      const worker = state.workers.find(w => w.email?.toLowerCase() === userEmail.toLowerCase())
+      let workerId = worker?.id
+      // Si no hay email en workers, buscar por nombre si coincide con email (opcional)
+      if (!workerId) {
+        const altWorker = state.workers.find(w => w.name?.toLowerCase() === userEmail.toLowerCase())
+        workerId = altWorker?.id
+      }
+      if (workerId) {
+        // Buscar sesiones activas (sin end_at) para ese trabajador
+        const { data: sessions, error } = await supa
+          .from('sessions')
+          .select('*')
+          .eq('worker_id', workerId)
+          .is('end_at', null)
+          .order('start_at', { ascending: false })
+        if (!error && sessions && sessions.length > 0) {
+          activeSession = sessions[0]
+        }
+      }
+    }
+    state.activeSession = activeSession
+    renderWorkerPanel()
+    startCountdownIfPlanned()
   } else {
     state.workers = []
     state.clients = []
     fillWorkerSelects()
     renderClients()
+    state.activeSession = null
+    renderWorkerPanel()
+    clearTimer()
   }
 }
 
@@ -202,7 +234,7 @@ function renderWorkers(){
   tbody.innerHTML = ''
   state.workers.forEach(w => {
     const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${w.name}</td><td><button class="ghost" data-id="${w.id}">Eliminar</button></td>`
+    tr.innerHTML = `<td>${w.name}</td><td>${w.email || ''}</td><td><button class="ghost" data-id="${w.id}">Eliminar</button></td>`
     tbody.appendChild(tr)
   })
 }
@@ -362,12 +394,15 @@ function bindEvents(){
     await refreshSession()
     if (!state.isAdmin){ alert('Solo admin'); return }
     const name = $('#workerNameNew').value.trim()
+    const email = $('#workerEmailNew').value.trim().toLowerCase()
     if (!name){ alert('Escribe el nombre del trabajador'); return }
-    const w = { id: uid(), name, active: true }
+    if (!email){ alert('Escribe el correo electrónico'); return }
+    const w = { id: uid(), name, email, active: true }
     const saved = await supaInsertWorker(w)
     if (!saved) return
     state.workers.push(saved)
     $('#workerNameNew').value = ''
+    $('#workerEmailNew').value = ''
     renderWorkers()
   })
   $('#workersTable').addEventListener('click', async e => {
