@@ -239,26 +239,6 @@ async function supaFetchSessionsToday(){
   if (error) { console.warn('supaFetchSessionsToday', error); return [] }
   return data || []
 }
-
-async function supaFetchSessionsLast7Days() {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  // Formato YYYY-MM-DD
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-  const { data, error } = await supa
-    .from('sessions')
-    .select('*')
-    .gte('date', sevenDaysAgoStr) // mayor o igual que hace 7 días
-    .order('start_at', { ascending: false });
-
-  if (error) {
-    console.warn('supaFetchSessionsLast7Days', error);
-    return [];
-  }
-  return data || [];
-}
 async function supaInsertSession(s){
   const { data, error } = await supa.from('sessions').insert(s).select().single()
   if (error) { alert('No se pudo iniciar la sesión: ' + error.message); return null }
@@ -374,18 +354,15 @@ function renderSchedules(){
     tbody.appendChild(tr)
   })
 }
-function renderLogs(){
-  const lastSessions = await supaFetchSessionsLast7Days();
+function renderLogs(sessions){
   const tbody = $('#logsTable tbody')
   tbody.innerHTML = ''
-  
-  lastSessions.forEach(s => {
+  sessions.forEach(s => {
     const client = state.clients.find(c => c.id === s.client_id)
     const workerName = s.worker || (state.workers.find(w => w.id === s.worker_id)?.name) || '—'
     const dur = s.end_at ? fmtDuration(new Date(s.end_at) - new Date(s.start_at)) : 'En curso'
     const tr = document.createElement('tr')
     tr.innerHTML = `<td>${workerName}</td><td>${client?client.name:'—'}</td><td>${fmtDateTime(s.start_at)}</td><td>${s.end_at?fmtDateTime(s.end_at):'—'}</td><td>${dur}</td>`
-
     tbody.appendChild(tr)
   })
 }
