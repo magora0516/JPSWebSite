@@ -96,7 +96,6 @@ async function signIn(){
 
   if (state.session){
     await ensureCurrentWorker()
-    await loadAll()
 }
 
 function applyRoleUI(){
