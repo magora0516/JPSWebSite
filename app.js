@@ -519,6 +519,8 @@ async function init(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
   renderLogs(await supaFetchSessionsToday())
+
+  console.log('Pagina recargada')
 }
 
 // --- Actualización en visibilidad ---
