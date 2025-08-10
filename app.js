@@ -79,10 +79,6 @@ async function refreshSession(){
   }
 
 
-  //Prueba de log para verificar el clientId
-    const clientId = $('#schedClient').value
-    console.log('ClientID es:', clientId)
-
 
   // --- NUEVO: Cargar o limpiar listas según sesión ---
   if (logged) {
@@ -90,6 +86,12 @@ async function refreshSession(){
     state.clients = await supaFetchClients()
     fillWorkerSelects()
     renderClients()
+
+    
+  //Prueba de log para verificar el clientId
+    const clientId = $('#schedClient').value
+    console.log('ClientID es:', clientId)
+
 
     // Buscar último turno activo del usuario y mostrarlo
     const userEmail = session?.user?.email
