@@ -30,7 +30,8 @@ const state = {
   workers: [],
   clients: [],
   schedules: [],
-  activeSession: null
+  activeSession: null,
+  currentWorker: []
 }
 
 // --- Autenticación y roles ---
@@ -78,6 +79,10 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
+  if (state.session) {
+  state.activeSession = await getActiveSessionForCurrentUser();
+  console.log('Sesión activa encontrada:', state.activeSession);
+}
 
 
   
@@ -188,6 +193,40 @@ async function supaUpdateSessionEnd(id, end, loc){
   const { error } = await supa.from('sessions').update({ end_at:end, loc_end_lat:loc?.lat, loc_end_lng:loc?.lng }).eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
+
+async function getActiveSessionForCurrentUser() {
+  if (!state.session?.user?.email) return null;
+
+  // Buscar el trabajador vinculado al email
+  const { data: worker, error: workerError } = await supa
+    .from('workers')
+    .select('id, name')
+    .eq('email', state.session.user.email)
+    .maybeSingle();
+
+  if (workerError || !worker) {
+    console.warn('No se encontró trabajador para el usuario actual');
+    return null;
+  }
+
+  state.currentWorker = worker; // Guardamos el trabajador actual
+
+  // Buscar la sesión activa (sin end_at)
+  const { data: session, error: sessionError } = await supa
+    .from('sessions')
+    .select('*')
+    .eq('worker_id', worker.id)
+    .is('end_at', null)
+    .maybeSingle();
+
+  if (sessionError) {
+    console.error('Error obteniendo sesión activa:', sessionError);
+    return null;
+  }
+
+  return session || null;
+}
+
 
 // --- Renderizado de tablas y paneles ---
 function fillWorkerSelects(){
