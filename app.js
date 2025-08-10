@@ -97,7 +97,6 @@ async function signIn(){
   state.clients = await supaFetchClients()
   renderClients()
 
-  await loadActiveSession() 
 }
 
 async function signUp(){
@@ -117,37 +116,6 @@ async function signOut(){
   fillWorkerSelects()
   renderClients()
   await refreshSession()
-}
-
-async function fetchUserActiveSession() {
-  if (!state.session?.user?.email) {
-    console.warn('No hay usuario en sesión')
-    return null
-  }
-
-  const { data, error } = await supa
-    .from('sessions')
-    .select('*')
-    .eq('worker_id', state.session.user.id) // O usa worker_id si lo guardas así
-    .is('end_at', null)
-    .limit(1)
-    .maybeSingle()
-
-  if (error) {
-    console.error('Error buscando sesión activa', error)
-    return null
-  }
-console.log('datos encontrados')
-  return data
-}
-
-
-async function loadActiveSession() {
-  // Obtiene la sesión activa del usuario actual
-  const active = await fetchUserActiveSession();
-  state.activeSession = active;
-  renderWorkerPanel();
-  startCountdownIfPlanned();
 }
 
 // --- Escucha cambios de autenticación ---
