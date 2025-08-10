@@ -444,50 +444,32 @@ function bindEvents(){
   })
 
   // Schedules
-  document.getElementById('btnSchedule')?.addEventListener('click', async (e) => {
-  e.preventDefault()
+  $('#btnSchedule').addEventListener('click', async () => {
+    await refreshSession()
+    if (!state.isAdmin){ alert('Solo admin'); return }
+    const date = $('#schedDate').value || todayStr()
+    const workerId = $('#schedWorkerSel').value
+    const clientId = $('#schedClient').value
+    const minutes = parseInt($('#schedMinutes').value, 10) || 60
+  console.log('Valor (value):', clientId)
+  console.log('Texto visible:', workerID)
 
-  await refreshSession()
-  if (!state.isAdmin){ alert('Solo admin'); return }
-
-  const dateEl   = document.getElementById('schedDate')
-  const wSelEl   = document.getElementById('schedWorkerSel')
-  const cSelEl   = document.getElementById('schedClient')
-  const minEl    = document.getElementById('schedMinutes')
-
-  if (!dateEl || !wSelEl || !cSelEl || !minEl){
-    console.log('Faltan elementos en la UI', {dateEl, wSelEl, cSelEl, minEl})
-    alert('Faltan campos en la interfaz')
-    return
-  }
-
-  const date     = dateEl.value || todayStr()
-  const workerId = wSelEl.value
-  const clientId = cSelEl.value
-  const minutes  = Number.parseInt(minEl.value || '60', 10) || 60
-
-  if (!workerId){ alert('Selecciona un trabajador'); return }
-  if (!clientId){ alert('Selecciona un cliente'); return }
-
-  const worker = state.workers.find(w => w.id === workerId)
-  if (!worker){ alert('Trabajador inválido'); return }
-
-  const sched = { id: uid(), date, worker: worker.name, worker_id: worker.id, client_id: clientId, minutes }
-
-  const saved = await supaInsertSchedule(sched)
-  if (!saved) return
-
-  state.schedules.push({ ...saved, clientId: saved.client_id })
-
-  dateEl.value = todayStr()
-  wSelEl.value = ''
-  cSelEl.value = ''
-  minEl.value  = 60
-
-  renderSchedules()
-  startCountdownIfPlanned()
-})
-
+    if (!workerId) { alert('Selecciona un trabajador'); return }
+    if (!clientId) { alert('Selecciona un cliente'); return }
+    const worker = state.workers.find(w => w.id === workerId)
+    const sched = { id: uid(), date, worker: worker.name, worker_id: worker.id, client_id: clientId, minutes }
+    const saved = await supaInsertSchedule(sched)
+    if (!saved) return
+    const finalSched = saved
+    finalSched.clientId = finalSched.client_id
+    state.schedules.push(finalSched)
+    // Limpiar campos solo si se guardó correctamente
+    $('#schedDate').value = todayStr()
+    $('#schedWorkerSel').value = ''
+    $('#schedClient').value = ''
+    $('#schedMinutes').value = 60
+    renderSchedules(); startCountdownIfPlanned()
+  })
   $('#schedTable').addEventListener('click', async e => {
     if (e.target.tagName === 'BUTTON'){
       await refreshSession()
