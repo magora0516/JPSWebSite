@@ -51,6 +51,10 @@ async function refreshSession(){
   const email = session?.user?.email || ''
   state.isAdmin = await isEmailAdmin(email)
 
+  //Prueba de log para verificar el clientId
+    const clientId = $('#schedClient').value
+    console.log('ClientID es:', clientId)
+
   // Actualiza panel de autenticación
   $('#authEmail').value = email
   const logged = !!session
@@ -449,10 +453,8 @@ function bindEvents(){
     if (!state.isAdmin){ alert('Solo admin'); return }
     const date = $('#schedDate').value || todayStr()
     const workerId = $('#schedWorkerSel').value
-    console.log('Texto visible:', workerID)
     const clientId = $('#schedClient').value
     const minutes = parseInt($('#schedMinutes').value, 10) || 60
-    console.log('Valor (value):', clientId)
 
     if (!workerId) { alert('Selecciona un trabajador'); return }
     if (!clientId) { alert('Selecciona un cliente'); return }
