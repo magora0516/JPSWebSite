@@ -79,7 +79,7 @@ async function refreshSession(){
     tabContainer?.classList.add('hidden')
   }
 
-  applyRoleUI()
+  await applyRoleUI()
 
 
   
@@ -98,7 +98,7 @@ async function signIn(){
     await ensureCurrentWorker()
 }
 
-function applyRoleUI(){
+async function applyRoleUI(){
   const tabs = document.getElementById('tabs-container')
   if (tabs) tabs.classList.toggle('hidden', !state.isAdmin)
 
