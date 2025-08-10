@@ -115,7 +115,9 @@ async function signIn(){
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
 
   if (state.session){
+    console.log('Verificacion de usuario')
     await ensureCurrentWorker()
+    
   }
 
 }
