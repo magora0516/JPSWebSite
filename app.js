@@ -8,6 +8,7 @@ const $ = (s) => document.querySelector(s)
 const pad = (n) => String(n).padStart(2, '0')
 const fmtDateTime = (d) => new Date(d).toLocaleString()
 const fmtDate = (d) => new Date(d).toISOString().slice(0,10)
+const fmtDate7days = (d) => new Date(d).toISOString().slice(0,10)
 const fmtDuration = (ms) => {
   if (!ms || ms < 0) return '—'
   const h = Math.floor(ms / 3600000)
@@ -15,6 +16,7 @@ const fmtDuration = (ms) => {
   const s = Math.floor((ms % 60000) / 1000)
   return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
+function Last7DaysStr(){ return (fmtDate(Date.now())-7) }
 function todayStr(){ return fmtDate(Date.now()) }
 function setToday(){
   $('#today').textContent = new Date().toLocaleDateString(undefined, {
@@ -234,13 +236,10 @@ async function supaFetchSessions7Days(){
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  // Formato YYYY-MM-DD
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-  
-  const { data, error } = await supa
+    const { data, error } = await supa
     .from('sessions')
     .select('*')
-    .gte('date', sevenDaysAgoStr) // mayor o igual que hace 7 días
+    .gte('date', Last7DaysStr()) // mayor o igual que hace 7 días
     .order('start_at', { ascending: false })
   if (error) { console.warn('supaFetchSessions7Days', error); return [] }
   return data || []
