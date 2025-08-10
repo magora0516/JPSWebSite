@@ -115,7 +115,6 @@ async function signIn(){
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
 
   if (state.session){
-    console.log('buscando usuario ', state.session.user.email)
     await ensureCurrentWorker()
   }
 
@@ -137,12 +136,10 @@ async function ensureCurrentWorker(){
   const uid = state.session.user.id
   const email = state.session.user.email?.toLowerCase()
 
-  // intenta por user_id primero
-  let { data: worker } = await supa.from('workers').select('id,name,email,user_id').eq('user_id', uid).maybeSingle()
-  if (worker) { state.currentWorker = worker; return worker }
-
   // si no existe pero hay fila por email, la vinculas
   if (email){
+    
+    console.log('buscando usuario ', email)
     const { data: byEmail } = await supa.from('workers').select('id,name,email,user_id').eq('email', email).maybeSingle()
     if (byEmail && !byEmail.user_id){
       const { data: patched } = await supa.from('workers').update({ user_id: uid }).eq('id', byEmail.id).select().maybeSingle()
