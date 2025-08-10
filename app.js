@@ -81,7 +81,7 @@ async function refreshSession(){
 
   if (state.session) {
     state.activeSession = await getActiveSessionForCurrentUser();
-    console.log('Sesión activa encontrada:', state.activeSession);
+    console.log('Sesión activa encontrada:', state.activeSession.worker);
   }  
 
 
