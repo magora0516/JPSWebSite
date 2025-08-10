@@ -460,6 +460,11 @@ function bindEvents(){
     const finalSched = saved
     finalSched.clientId = finalSched.client_id
     state.schedules.push(finalSched)
+    // Limpiar campos solo si se guardó correctamente
+    $('#schedDate').value = todayStr()
+    $('#schedWorkerSel').value = ''
+    $('#schedClient').value = ''
+    $('#schedMinutes').value = 60
     renderSchedules(); startCountdownIfPlanned()
   })
   $('#schedTable').addEventListener('click', async e => {
