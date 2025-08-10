@@ -80,45 +80,7 @@ async function refreshSession(){
 
 
 
-  /*
-
-    // Buscar último turno activo del usuario y mostrarlo
-    const userEmail = session?.user?.email
-    let activeSession = null
-    if (userEmail) {
-      // Buscar el trabajador por email si existe en la tabla workers
-      const worker = state.workers.find(w => w.email?.toLowerCase() === userEmail.toLowerCase())
-      let workerId = worker?.id
-      // Si no hay email en workers, buscar por nombre si coincide con email (opcional)
-      if (!workerId) {
-        const altWorker = state.workers.find(w => w.name?.toLowerCase() === userEmail.toLowerCase())
-        workerId = altWorker?.id
-      }
-      if (workerId) {
-        // Buscar sesiones activas (sin end_at) para ese trabajador
-        const { data: sessions, error } = await supa
-          .from('sessions')
-          .select('*')
-          .eq('worker_id', workerId)
-          .is('end_at', null)
-          .order('start_at', { ascending: false })
-        if (!error && sessions && sessions.length > 0) {
-          activeSession = sessions[0]
-        }
-      }
-    }
-    state.activeSession = activeSession
-    renderWorkerPanel()
-    startCountdownIfPlanned()
-  } else {
-    state.workers = []
-    state.clients = []
-    fillWorkerSelects()
-    renderClients()
-    state.activeSession = null
-    renderWorkerPanel()
-    clearTimer()
-  } */
+  
 }
 
 // --- Funciones de autenticación ---
@@ -134,6 +96,8 @@ async function signIn(){
   renderWorkers()
   state.clients = await supaFetchClients()
   renderClients()
+
+  await loadActiveSession() 
 }
 
 async function signUp(){
@@ -153,6 +117,28 @@ async function signOut(){
   fillWorkerSelects()
   renderClients()
   await refreshSession()
+}
+
+async function fetchUserActiveSession() {
+  const email = state.session?.user?.email;
+  if (!email) return null;
+  // Busca la sesión activa del usuario actual (sin end_at)
+  const { data, error } = await supa
+    .from('sessions')
+    .select('*')
+    .eq('worker_email', email)
+    .is('end_at', null)
+    .maybeSingle();
+  if (error) { console.warn('fetchUserActiveSession', error); return null; }
+  return data;
+}
+
+async function loadActiveSession() {
+  // Obtiene la sesión activa del usuario actual
+  const active = await fetchUserActiveSession();
+  state.activeSession = active;
+  renderWorkerPanel();
+  startCountdownIfPlanned();
 }
 
 // --- Escucha cambios de autenticación ---
