@@ -212,8 +212,8 @@ button {
 .section {
   max-width: 100%;      /* no más ancho que la pantalla */
   box-sizing: border-box;
-  padding: 10px;
-  overflow-x: auto;     /* evita que se corte si hay tablas grandes */
+  padding: 1px;
+  overflow-x: hidden;     /* evita que se corte si hay tablas grandes */
 }
 
 #worker,
