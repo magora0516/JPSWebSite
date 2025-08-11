@@ -196,3 +196,15 @@ button {
 }
 
 
+.logo-container {
+  display: flex;
+  flex-direction: column; /* o row si lo quieres al lado del título */
+  align-items: center; /* centra horizontalmente */
+  text-align: center;
+}
+
+.logo {
+  max-width: 100px; /* ajusta el tamaño */
+  height: auto;
+  margin-bottom: 8px; /* separación con el título */
+}
