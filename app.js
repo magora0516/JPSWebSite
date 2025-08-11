@@ -293,30 +293,35 @@ function downloadCsv(filename, csvText){
 
 function buildSessionsCsv(rows){
   const headers = [
-    'session_id','date','worker_id','worker_name','client_id','client_name',
-    'start_at','end_at','duration_hms','loc_start_lat','loc_start_lng','loc_end_lat','loc_end_lng'
+    'date','worker_name','client_name','duration_hms','loc_start_url','loc_end_url'
   ]
   const lines = [headers.join(',')]
+
   for (const r of rows){
     const dur = r.end_at ? fmtDuration(new Date(r.end_at) - new Date(r.start_at)) : ''
+    const startUrl = mapsLink(r.loc_start_lat, r.loc_start_lng)
+    const endUrl   = mapsLink(r.loc_end_lat, r.loc_end_lng)
+
     lines.push([
-      r.id,
-      r.date,
-      r.worker_id || '',
+      r.date || '',
       r.worker_name || '',
-      r.client_id || '',
       r.client_name || '',
-      r.start_at || '',
-      r.end_at || '',
       dur,
-      r.loc_start_lat ?? '',
-      r.loc_start_lng ?? '',
-      r.loc_end_lat ?? '',
-      r.loc_end_lng ?? ''
+      startUrl,
+      endUrl
     ].map(csvEscape).join(','))
   }
   return lines.join('\n')
 }
+
+
+function mapsLink(lat, lng){
+  if (lat == null || lng == null) return ''
+  const a = Number(lat), b = Number(lng)
+  if (Number.isNaN(a) || Number.isNaN(b)) return ''
+  return `https://maps.apple.com/?ll=${a.toFixed(6)},${b.toFixed(6)}`
+}
+
 //Fin API Exportar CSV
 
 
@@ -688,43 +693,44 @@ function bindEvents(){
 
   //Exportar CSV
   $('#btnExportCsv')?.addEventListener('click', async (e)=>{
-  e.preventDefault()
-  await refreshSession()
-  // Opcional: solo admin exporta
-  if (!state.isAdmin){ alert('Solo admin'); return }
+    e.preventDefault()
+    await refreshSession()
+    // Opcional: solo admin exporta
+    if (!state.isAdmin){ alert('Solo admin'); return }
 
-  // Fechas
-  const fromEl = $('#exportFrom'), toEl = $('#exportTo')
-  const today = new Date(); today.setHours(0,0,0,0)
-  const defFrom = new Date(today); defFrom.setDate(defFrom.getDate() - 7)
+    // Fechas
+    const fromEl = $('#exportFrom'), toEl = $('#exportTo')
+    const today = new Date(); today.setHours(0,0,0,0)
+    const defFrom = new Date(today); defFrom.setDate(defFrom.getDate() - 7)
 
-  const fromYmd = fromEl?.value || ymdLocal(defFrom)
-  const toYmd   = toEl?.value   || ymdLocal(today)
+    const fromYmd = fromEl?.value || ymdLocal(defFrom)
+    const toYmd   = toEl?.value   || ymdLocal(today)
 
-  if (fromYmd > toYmd){ alert('Rango inválido: Desde > Hasta'); return }
+    if (fromYmd > toYmd){ alert('Rango inválido: Desde > Hasta'); return }
 
-  // Asegura catálogos cargados
-  if (!state.workers?.length)  state.workers  = await supaFetchWorkers()
-  if (!state.clients?.length)  state.clients  = await supaFetchClients()
+    // Asegura catálogos cargados
+    if (!state.workers?.length)  state.workers  = await supaFetchWorkers()
+    if (!state.clients?.length)  state.clients  = await supaFetchClients()
 
-  // Consulta
-  const sessions = await supaFetchSessionsRange(fromYmd, toYmd)
+    // Consulta
+    const sessions = await supaFetchSessionsRange(fromYmd, toYmd)
 
-  // Enriquecer con nombres
-  const wById = Object.fromEntries(state.workers.map(w => [w.id, w]))
-  const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
-  const rows = sessions.map(s => ({
-    ...s,
-    worker_name: s.worker || wById[s.worker_id]?.name || '',
-    client_name: cById[s.client_id]?.name || ''
-  }))
+    // Enriquecer con nombres
+    const wById = Object.fromEntries(state.workers.map(w => [w.id, w]))
+    const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
+    const rows = sessions.map(s => ({
+      ...s,
+      worker_name: s.worker || wById[s.worker_id]?.name || '',
+      client_name: cById[s.client_id]?.name || ''
+    })) 
 
-  // CSV y descarga
-  const csv = buildSessionsCsv(rows)
-  const fname = `registros_${fromYmd}_a_${toYmd}.csv`
-  downloadCsv(fname, csv)
+    // CSV y descarga
+    const csv = buildSessionsCsv(rows)
+    const fname = `registros_${fromYmd}_a_${toYmd}.csv`
+    downloadCsv(fname, csv)
 })
 }
+
 
 function initForms(){ $('#schedDate').value = todayStr() }
 
