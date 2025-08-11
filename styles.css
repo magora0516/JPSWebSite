@@ -189,15 +189,11 @@ button {
    ========================= */
 
 #btnSignOut {
-  position: fixed;       /* siempre en la misma posición de la pantalla */
-  top: 10px;
-  right: 10px;
-  padding: 4px 8px;      /* más pequeño */
-  font-size: 12px;
+  padding: 2px 6px;    /* menos espacio interno */
+  font-size: 12px;     /* letra más pequeña */
   background-color: #ccc;
   border: none;
-  border-radius: 4px;
-  z-index: 1000;         /* encima de todo, pero sin tapar inputs */
+  border-radius: 4px;        /* encima de todo, pero sin tapar inputs */
 }
 
 
