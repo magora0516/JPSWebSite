@@ -231,6 +231,8 @@ async function supaDeleteSchedule(id){
 
 // --- API: Sesiones ---
 async function supaFetchSessionsToday(){
+
+  console.log(todayStr())
   const { data, error } = await supa
     .from('sessions')
     .select('*')
