@@ -250,6 +250,35 @@ async function supaUpdateSessionEnd(id, end, loc){
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
 
+/* async function supaUpdateSessionEnd(id, end, loc){
+  console.log('Actualizando sesión', id, 'fin', end, 'loc', loc)
+  try {
+    const { data, error, status } = await supa
+      .from('sessions')
+      .update({
+        end_at: end,
+        loc_end_lat: loc?.lat ?? null,
+        loc_end_lng: loc?.lng ?? null
+      })
+      .eq('id', id)
+      .is('end_at', null)   // no cerrar si ya estaba cerrada
+      .select()
+      .single()
+
+    if (error){
+      console.error('sessions.update error', { status, error })
+      alert('No se pudo finalizar la sesión: ' + (error.message || ''))
+      return null
+    }
+    console.log('sessions.update ok', data)
+    return data
+  } catch (e){
+    console.error('sessions.update exception', e)
+    alert('Error inesperado al finalizar la sesión')
+    return null
+  }
+} */
+
 
 async function getActiveSessionForCurrentUser() {
   if (!state.session?.user?.email) return null;
@@ -416,6 +445,33 @@ function ensureGeo(cb){
     { enableHighAccuracy:true, maximumAge:30000, timeout:8000 }
   )
 }
+
+/* // --- Inicio y fin de turno ---
+async function startShift(){
+  await refreshSession()
+  const workerId = $('#workerSel').value
+  const clientId = $('#workerClient').value
+  if (!workerId){ alert('Selecciona un trabajador'); return }
+  if (!clientId){ alert('Selecciona un cliente'); return }
+  const worker = state.workers.find(w => w.id === workerId)
+  ensureGeo(async loc => {
+    const session = {
+      id: uid(),
+      worker: worker.name,
+      worker_id: worker.id,
+      client_id: clientId,
+      date: todayStr(),
+      start_at: new Date().toISOString(), end_at: null,
+      loc_start_lat: loc?.lat || null, loc_start_lng: loc?.lng || null,
+      loc_end_lat: null, loc_end_lng: null
+    }
+    const saved = await supaInsertSession(session)
+    const finalS = saved || session
+    state.activeSession = finalS
+    renderWorkerPanel(); startCountdownIfPlanned()
+    const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
+  })
+} */
 
 async function startShift(){
   await refreshSession()
