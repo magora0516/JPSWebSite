@@ -210,15 +210,15 @@ button {
 }
 
 .section {
-  max-width: 100%;      /* no más ancho que la pantalla */
+  max-width: 80%;      /* no más ancho que la pantalla */
   box-sizing: border-box;
   padding: 1px;
-  overflow-x: hidden;     /* evita que se corte si hay tablas grandes */
+  overflow-x: auto;     /* evita que se corte si hay tablas grandes */
 }
 
 #worker,
 #admin {
-  width: 100%;
-  max-width: 600px;     /* ancho máximo similar en ambas secciones */
+  width: 80%;
+  max-width: 400px;     /* ancho máximo similar en ambas secciones */
   margin: 0 auto;       /* centra el contenido */
 }
