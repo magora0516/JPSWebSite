@@ -15,7 +15,12 @@ const fmtDuration = (ms) => {
   const s = Math.floor((ms % 60000) / 1000)
   return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
-function todayStr(){ return fmtDate(Date.now()) }
+//function todayStr(){ return fmtDate(Date.now()) }
+function todayStr(){
+  const d = new Date()
+  d.setHours(0,0,0,0) // quita hora, minuto y segundo
+  return fmtDate(d)
+}
 function setToday(){
   $('#today').textContent = new Date().toLocaleDateString(undefined, {
     weekday:'long', year:'numeric', month:'long', day:'numeric'
