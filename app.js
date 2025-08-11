@@ -397,7 +397,7 @@ function renderSchedules(){
     const clientName = client ? client.name : '—'
     const workerName = s.worker || (state.workers.find(w => w.id === s.worker_id)?.name) || '—'
     const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${s.date}</td><td>${workerName}</td><td>${clientName}</td><td>${s.minutes} min</td><td><button class="ghost" data-id="${s.id}">Eliminar</button></td>`
+    tr.innerHTML = `<td>${s.date}</td><td>${workerName}</td><td>${clientName}</td><td>${s.minutes} min</td><td><button class="ghost" data-id="${s.id}">X</button></td>`
     tbody.appendChild(tr)
   })
 }
