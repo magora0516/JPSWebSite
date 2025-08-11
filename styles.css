@@ -189,6 +189,7 @@ button {
    ========================= */
 
 #btnSignOut {
+  width : 10px;
   padding: 2px 6px;    /* menos espacio interno */
   font-size: 12px;     /* letra más pequeña */
   background-color: #ccc;
