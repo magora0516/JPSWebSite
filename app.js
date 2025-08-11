@@ -230,21 +230,6 @@ async function supaDeleteSchedule(id){
 }
 
 // --- API: Sesiones ---
-async function supaFetchSessions7Days(){
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  // Formato YYYY-MM-DD
-  const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-  
-  const { data, error } = await supa
-    .from('sessions')
-    .select('*')
-    .gte('date', sevenDaysAgoStr) // mayor o igual que hace 7 días
-    .order('start_at', { ascending: false })
-  if (error) { console.warn('supaFetchSessions7Days', error); return [] }
-  return data || []
-}
 async function supaFetchSessionsToday(){
   const { data, error } = await supa
     .from('sessions')
@@ -496,7 +481,7 @@ async function startShift(){
     const finalS = saved || session
     state.activeSession = finalS
     renderWorkerPanel(); startCountdownIfPlanned()
-    const todaySessions = await supaFetchSessions7Days();
+    const todaySessions = await supaFetchSessionsToday();
     renderLogs(todaySessions)
   })
 }
@@ -514,7 +499,7 @@ async function stopShift(){
     a.loc_end_lng = loc?.lng || null
     state.activeSession = null
     renderWorkerPanel(); clearTimer()
-    const todaySessions = await supaFetchSessions7Days(); renderLogs(todaySessions)
+    const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
   })
 }
 
@@ -529,7 +514,7 @@ function initTabs(){
     if (!state.isAdmin){ alert('Acceso solo para administradores'); return }
     $('#tab-admin').classList.add('active'); $('#tab-worker').classList.remove('active')
     $('#worker').style.display='none'; $('#admin').style.display='grid'
-    renderLogs(await supaFetchSessions7Days())
+    renderLogs(await supaFetchSessionsToday())
   })
 }
 function bindEvents(){
@@ -588,7 +573,7 @@ function bindEvents(){
       await supaDeleteClient(id)
       state.clients = state.clients.filter(c => c.id !== id)
       state.schedules = state.schedules.filter(s => s.client_id !== id)
-      renderClients(); renderSchedules(); renderLogs(await supaFetchSessions7Days())
+      renderClients(); renderSchedules(); renderLogs(await supaFetchSessionsToday())
     }
   })
 
@@ -642,7 +627,7 @@ async function init(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
-  renderLogs(await supaFetchSessions7Days())
+  renderLogs(await supaFetchSessionsToday())
 
   console.log('Pagina recargada')
 }
@@ -654,7 +639,7 @@ document.addEventListener('visibilitychange', async () => {
     state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
-    renderLogs(await supaFetchSessions7Days())
+    renderLogs(await supaFetchSessionsToday())
     console.log('Página visible, actualizando datos...')
   } 
 })
