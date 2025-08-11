@@ -210,15 +210,42 @@ button {
 }
 
 .section {
-  max-width: 80%;      /* no más ancho que la pantalla */
+  max-width: 100%;      /* no más ancho que la pantalla */
   box-sizing: border-box;
   padding: 1px;
   overflow-x: auto;     /* evita que se corte si hay tablas grandes */
 }
-
+/* Mismo ancho y centrado para ambas secciones */
 #worker,
-#admin {
-  width: 80%;
-  max-width: 400px;     /* ancho máximo similar en ambas secciones */
-  margin: 0 auto;       /* centra el contenido */
+#admin,
+#tabs-container {
+  width: 100%;
+  max-width: 640px;        /* ajusta si quieres más ancho */
+  margin: 0 auto;
+}
+
+/* Evita que algo ensanche el viewport */
+html, body { overflow-x: hidden; }
+
+/* Tablas responsivas dentro de las cards */
+.card { overflow-x: auto; }
+
+.list {
+  width: 100%;
+  max-width: 100%;
+  table-layout: fixed;     /* columnas calculadas, evita crecer */
+}
+
+.list th,
+.list td {
+  white-space: normal;
+  overflow-wrap: anywhere; /* quiebra textos largos */
+}
+
+/* Formularios y botones no deben superar el contenedor */
+input, select, button, img, table { max-width: 100%; }
+
+/* En móvil, una sola columna siempre */
+@media (max-width: 720px){
+  .two { grid-template-columns: 1fr; }
 }
