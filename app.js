@@ -257,34 +257,69 @@ async function supaUpdateSessionEnd(id, end, loc){
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
 
-/* async function supaUpdateSessionEnd(id, end, loc){
-  console.log('Actualizando sesión', id, 'fin', end, 'loc', loc)
-  try {
-    const { data, error, status } = await supa
-      .from('sessions')
-      .update({
-        end_at: end,
-        loc_end_lat: loc?.lat ?? null,
-        loc_end_lng: loc?.lng ?? null
-      })
-      .eq('id', id)
-      .is('end_at', null)   // no cerrar si ya estaba cerrada
-      .select()
-      .single()
+//API Exportar CSV
+function ymdLocal(d){
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0')
+  return `${y}-${m}-${day}`
+}
 
-    if (error){
-      console.error('sessions.update error', { status, error })
-      alert('No se pudo finalizar la sesión: ' + (error.message || ''))
-      return null
-    }
-    console.log('sessions.update ok', data)
-    return data
-  } catch (e){
-    console.error('sessions.update exception', e)
-    alert('Error inesperado al finalizar la sesión')
-    return null
+async function supaFetchSessionsRange(fromYmd, toYmd){
+  const { data, error } = await supa
+    .from('sessions')
+    .select('*')
+    .gte('date', fromYmd)
+    .lte('date', toYmd)
+    .order('date', { ascending: true })
+    .order('start_at', { ascending: true })
+  if (error){ console.warn('supaFetchSessionsRange', error); return [] }
+  return data || []
+}
+
+function csvEscape(v){
+  if (v === null || v === undefined) return ''
+  const s = String(v)
+  if (/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`
+  return s
+}
+
+function downloadCsv(filename, csvText){
+  const blob = new Blob([`\uFEFF${csvText}`], { type: 'text/csv;charset=utf-8;' }) // BOM para Excel
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename
+  document.body.appendChild(a); a.click()
+  document.body.removeChild(a); URL.revokeObjectURL(url)
+}
+
+function buildSessionsCsv(rows){
+  const headers = [
+    'session_id','date','worker_id','worker_name','client_id','client_name',
+    'start_at','end_at','duration_hms','loc_start_lat','loc_start_lng','loc_end_lat','loc_end_lng'
+  ]
+  const lines = [headers.join(',')]
+  for (const r of rows){
+    const dur = r.end_at ? fmtDuration(new Date(r.end_at) - new Date(r.start_at)) : ''
+    lines.push([
+      r.id,
+      r.date,
+      r.worker_id || '',
+      r.worker_name || '',
+      r.client_id || '',
+      r.client_name || '',
+      r.start_at || '',
+      r.end_at || '',
+      dur,
+      r.loc_start_lat ?? '',
+      r.loc_start_lng ?? '',
+      r.loc_end_lat ?? '',
+      r.loc_end_lng ?? ''
+    ].map(csvEscape).join(','))
   }
-} */
+  return lines.join('\n')
+}
+//Fin API Exportar CSV
+
+
 
 
 async function getActiveSessionForCurrentUser() {
@@ -650,6 +685,45 @@ function bindEvents(){
   // Shifts
   $('#btnStart').addEventListener('click', startShift)
   $('#btnStop').addEventListener('click', stopShift)
+
+  //Exportar CSV
+  $('#btnExportCsv')?.addEventListener('click', async (e)=>{
+  e.preventDefault()
+  await refreshSession()
+  // Opcional: solo admin exporta
+  if (!state.isAdmin){ alert('Solo admin'); return }
+
+  // Fechas
+  const fromEl = $('#exportFrom'), toEl = $('#exportTo')
+  const today = new Date(); today.setHours(0,0,0,0)
+  const defFrom = new Date(today); defFrom.setDate(defFrom.getDate() - 7)
+
+  const fromYmd = fromEl?.value || ymdLocal(defFrom)
+  const toYmd   = toEl?.value   || ymdLocal(today)
+
+  if (fromYmd > toYmd){ alert('Rango inválido: Desde > Hasta'); return }
+
+  // Asegura catálogos cargados
+  if (!state.workers?.length)  state.workers  = await supaFetchWorkers()
+  if (!state.clients?.length)  state.clients  = await supaFetchClients()
+
+  // Consulta
+  const sessions = await supaFetchSessionsRange(fromYmd, toYmd)
+
+  // Enriquecer con nombres
+  const wById = Object.fromEntries(state.workers.map(w => [w.id, w]))
+  const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
+  const rows = sessions.map(s => ({
+    ...s,
+    worker_name: s.worker || wById[s.worker_id]?.name || '',
+    client_name: cById[s.client_id]?.name || ''
+  }))
+
+  // CSV y descarga
+  const csv = buildSessionsCsv(rows)
+  const fname = `registros_${fromYmd}_a_${toYmd}.csv`
+  downloadCsv(fname, csv)
+})
 }
 
 function initForms(){ $('#schedDate').value = todayStr() }
