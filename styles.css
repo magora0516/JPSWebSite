@@ -99,7 +99,7 @@ h1 { margin: 0; font-size: 20px; }
    ========================= */
 label { font-size: 14px; color: var(--muted); }
 input, select {
-  width: 90%;
+  width: 100%;
   padding: 12px;
   font-size: 16px;
   border-radius: 10px;
@@ -111,7 +111,7 @@ input, select {
    Botones
    ========================= */
 button {
-  width: 90%;
+  width: 100%;
   padding: 14px;
   font-size: 16px;
   font-weight: 700;
@@ -140,7 +140,7 @@ button {
    Tablas
    ========================= */
 .list {
-  width: 90%;
+  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -219,7 +219,7 @@ button {
 #worker,
 #admin,
 #tabs-container {
-  width: 90%;
+  width: 100%;
   max-width: 640px;        /* ajusta si quieres más ancho */
   margin: 0 auto;
 }
@@ -231,8 +231,8 @@ html, body { overflow-x: hidden; }
 .card { overflow-x: auto; }
 
 .list {
-  width: 90%;
-  max-width: 90%;
+  width: 100%;
+  max-width: 100%;
   table-layout: fixed;     /* columnas calculadas, evita crecer */
 }
 
@@ -243,7 +243,7 @@ html, body { overflow-x: hidden; }
 }
 
 /* Formularios y botones no deben superar el contenedor */
-input, select, button, img, table { max-width: 90%; }
+input, select, button, img, table { max-width: 100%; }
 
 /* En móvil, una sola columna siempre */
 @media (max-width: 640px){
