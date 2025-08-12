@@ -114,7 +114,7 @@ async function signIn(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
-  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned();startTimeOut()
 
   if (state.session){
     console.log('Verificacion de usuario')
@@ -140,7 +140,7 @@ async function signUp(){
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
-  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned()
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
 
   console.log(state.session)
 
@@ -485,26 +485,6 @@ function startCountdownIfPlanned(){
   tick(); timerHandle = setInterval(tick, 1000)
 }
 
-function startElapsedTimeCounter(){
-  clearTimerDuration()
-
-  const a = state.activeSession
-  if (!a) { 
-    $('#countdown').textContent = '00:00:00'
-    return 
-  }
-
-  function tick(){
-    const elapsed = Date.now() - new Date(a.start_at).getTime()
-    $('#countdown').textContent = fmtDuration(Math.max(elapsed, 0))
-    $('#countdown').style.color = 'inherit'
-  }
-
-  tick()
-  timerHandle = setInterval(tick, 1000)
-}
-
-
 function startTimeOut(){
   clearTimerDuration()
 
@@ -570,7 +550,7 @@ async function startShift(){
 
     const finalS = saved || session
     state.activeSession = finalS
-    renderWorkerPanel(); startCountdownIfPlanned()
+    renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
     const todaySessions = await supaFetchSessionsToday();
     renderLogs(todaySessions)
   })
@@ -690,7 +670,7 @@ function bindEvents(){
     $('#schedWorkerSel').value = ''
     $('#schedClient').value = ''
     $('#schedMinutes').value = 60
-    renderSchedules(); startCountdownIfPlanned()
+    renderSchedules(); startCountdownIfPlanned(); startTimeOut()
   })
   $('#schedTable').addEventListener('click', async e => {
     if (e.target.tagName === 'BUTTON'){
@@ -699,7 +679,7 @@ function bindEvents(){
       const id = e.target.getAttribute('data-id')
       await supaDeleteSchedule(id)
       state.schedules = state.schedules.filter(s => s.id !== id)
-      renderSchedules(); startCountdownIfPlanned()
+      renderSchedules(); startCountdownIfPlanned(); startTimeOut()
     }
   })
 
@@ -756,7 +736,7 @@ async function init(){
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
-  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
+  await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
   renderLogs(await supaFetchSessionsToday())
 
   console.log('Pagina recargada')
@@ -765,7 +745,7 @@ async function init(){
 // --- Actualización en visibilidad ---
 document.addEventListener('visibilitychange', async () => {
    if (document.visibilityState === 'visible'){
-    renderWorkerPanel(); startCountdownIfPlanned(); await refreshSession()
+    renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
     state.workers = await supaFetchWorkers(); renderWorkers()
     state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
