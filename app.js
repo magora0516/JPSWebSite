@@ -432,7 +432,7 @@ function renderWorkerPanel(){
     $('#state').textContent = 'Libre'
     $('#startAt').textContent = '—'
     $('#endAt').textContent = '—'
-    $('#duration').textContent = '—'
+    $('#duration').textContent = '00:00:00'
     $('#locStart').textContent = '—'
     $('#locEnd').textContent = '—'
     $('#countdown').textContent = '00:00:00'
@@ -443,7 +443,7 @@ function renderWorkerPanel(){
   $('#startAt').textContent = fmtDateTime(a.start_at)
   $('#endAt').textContent = a.end_at ? fmtDateTime(a.end_at) : '—'
   const durMs = (a.end_at? new Date(a.end_at) : new Date()) - new Date(a.start_at)
-  $('#duration').textContent = fmtDuration(durMs)
+  //$('#duration').textContent = fmtDuration(durMs)
   $('#locStart').textContent = a.loc_start_lat ? `${a.loc_start_lat.toFixed(5)}, ${a.loc_start_lng.toFixed(5)}` : '—'
   $('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
   toggleShiftCards()
@@ -451,8 +451,10 @@ function renderWorkerPanel(){
 
 // --- Cuenta regresiva de sesión ---
 let timerHandle = null
+let timerHandleDuration = null
 
 function clearTimer(){ if (timerHandle) { clearInterval(timerHandle); timerHandle = null } }
+function clearTimerDuration(){ if (timerHandleDuration) { clearTimeout(timerHandleDuration); timerHandleDuration = null } }
 
 async function isSessionActiveForUser() {
     if (state.session) {
@@ -465,9 +467,6 @@ function startCountdownIfPlanned(){
   clearTimer()
 
   const a = state.activeSession
-/*   if (!a) {console.log('No hay sesión activa, no se inicia cuenta regresiva')}
-  else {console.log('Sesión activa')} */
-
 
   if (!a) { $('#countdown').textContent = '00:00:00'; return }
   // Buscar si hay un plan para la sesión activa
@@ -476,15 +475,7 @@ function startCountdownIfPlanned(){
     s.date === a.date && s.client_id === a.client_id
      )
   
-     
-  /* const plan = state.schedules.find(s =>
-    s.date === a.date && s.client_id === a.client_id &&
-    ((s.worker_id && a.worker_id && s.worker_id === a.worker_id) ||
-     (!s.worker_id && s.worker && a.worker && s.worker.toLowerCase() === a.worker.toLowerCase()))
-  ) */
-    console.log('Intento de conteo',a.date, a.client_id)
-  if (!plan) { $('#countdown').textContent = '00:00:00'; return }
-  console.log('Se encontró plan:', plan.client_id)
+    if (!plan) { $('#countdown').textContent = '00:00:00'; return }
   const endTarget = new Date(a.start_at).getTime() + plan.minutes * 60000
   function tick(){
     const left = endTarget - Date.now()
@@ -492,6 +483,46 @@ function startCountdownIfPlanned(){
     if (left <= 0) $('#countdown').style.color = 'var(--warn)'; else $('#countdown').style.color = 'inherit'
   }
   tick(); timerHandle = setInterval(tick, 1000)
+}
+
+function startElapsedTimeCounter(){
+  clearTimerDuration()
+
+  const a = state.activeSession
+  if (!a) { 
+    $('#countdown').textContent = '00:00:00'
+    return 
+  }
+
+  function tick(){
+    const elapsed = Date.now() - new Date(a.start_at).getTime()
+    $('#countdown').textContent = fmtDuration(Math.max(elapsed, 0))
+    $('#countdown').style.color = 'inherit'
+  }
+
+  tick()
+  timerHandle = setInterval(tick, 1000)
+}
+
+
+function startTimeOut(){
+  clearTimerDuration()
+
+  const a = state.activeSession
+
+  if (!a) { $('#duration').textContent = '00:00:00'; return }
+  
+
+  
+  function tick(){
+    const elapsed = Date.now() - new Date(a.start_at).getTime()
+    $('#duration').textContent = fmtDuration(Math.max(elapsed, 0))
+    $('#duration').style.color = 'inherit'
+  }
+
+  tick()
+  timerHandle = setInterval(tick, 1000)
+
 }
 
 // --- Geolocalización ---
