@@ -94,6 +94,7 @@ async function refreshSession(){
   }
 
   applyRoleUI()
+  toggleShiftCards()
 
 
   
@@ -181,6 +182,14 @@ async function signOut(){
   fillWorkerSelects()
   renderClients()
   await refreshSession()
+}
+
+function toggleShiftCards(){
+  const hasActive = !!state.activeSession
+  const startCard  = document.getElementById('cardStart')
+  const statusCard = document.getElementById('cardStatus')
+  if (startCard)  startCard.style.display  = hasActive ? 'none'  : 'block'
+  if (statusCard) statusCard.style.display = hasActive ? 'block' : 'none'
 }
 
 // --- Escucha cambios de autenticación ---
@@ -427,6 +436,7 @@ function renderWorkerPanel(){
     $('#locStart').textContent = '—'
     $('#locEnd').textContent = '—'
     $('#countdown').textContent = '00:00:00'
+    toggleShiftCards()
     return
   }
   $('#state').textContent = 'En servicio'
@@ -436,6 +446,7 @@ function renderWorkerPanel(){
   $('#duration').textContent = fmtDuration(durMs)
   $('#locStart').textContent = a.loc_start_lat ? `${a.loc_start_lat.toFixed(5)}, ${a.loc_start_lng.toFixed(5)}` : '—'
   $('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
+  toggleShiftCards()
 }
 
 // --- Cuenta regresiva de sesión ---
@@ -493,32 +504,6 @@ function ensureGeo(cb){
   )
 }
 
-/* // --- Inicio y fin de turno ---
-async function startShift(){
-  await refreshSession()
-  const workerId = $('#workerSel').value
-  const clientId = $('#workerClient').value
-  if (!workerId){ alert('Selecciona un trabajador'); return }
-  if (!clientId){ alert('Selecciona un cliente'); return }
-  const worker = state.workers.find(w => w.id === workerId)
-  ensureGeo(async loc => {
-    const session = {
-      id: uid(),
-      worker: worker.name,
-      worker_id: worker.id,
-      client_id: clientId,
-      date: todayStr(),
-      start_at: new Date().toISOString(), end_at: null,
-      loc_start_lat: loc?.lat || null, loc_start_lng: loc?.lng || null,
-      loc_end_lat: null, loc_end_lng: null
-    }
-    const saved = await supaInsertSession(session)
-    const finalS = saved || session
-    state.activeSession = finalS
-    renderWorkerPanel(); startCountdownIfPlanned()
-    const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
-  })
-} */
 
 async function startShift(){
   await refreshSession()
