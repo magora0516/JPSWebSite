@@ -75,7 +75,7 @@ h1 { margin: 0; font-size: 20px; }
    Grillas y tarjetas
    ========================= */
 .grid { display: grid; gap: 12px; }
-.two { grid-template-columns: 1fr 1fr; }
+.two { grid-template-columns: 1fr; }
 @media (max-width: 720px) {
   .two { grid-template-columns: 1fr; }
 }
