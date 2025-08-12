@@ -98,8 +98,16 @@ h1 { margin: 0; font-size: 20px; }
    Formularios
    ========================= */
 label { font-size: 14px; color: var(--muted); }
-input, select {
+input {
   width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+select {
+  width: 90%;
   padding: 12px;
   font-size: 16px;
   border-radius: 10px;
@@ -243,7 +251,7 @@ html, body { overflow-x: hidden; }
 }
 
 /* Formularios y botones no deben superar el contenedor */
-input, select, button, img, table { max-width: 100%; }
+input, button, img, table { max-width: 100%; }
 
 /* En móvil, una sola columna siempre */
 @media (max-width: 640px){
