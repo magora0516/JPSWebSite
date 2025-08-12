@@ -99,7 +99,7 @@ h1 { margin: 0; font-size: 20px; }
    ========================= */
 label { font-size: 14px; color: var(--muted); }
 input {
-  width: 100%;
+  width: 90%;
   padding: 12px;
   font-size: 16px;
   border-radius: 10px;
@@ -107,7 +107,7 @@ input {
   background: #fff;
 }
 select {
-  width: 90%;
+  width: 100%;
   padding: 12px;
   font-size: 16px;
   border-radius: 10px;
@@ -251,7 +251,7 @@ html, body { overflow-x: hidden; }
 }
 
 /* Formularios y botones no deben superar el contenedor */
-input, button, img, table { max-width: 100%; }
+select, button, img, table { max-width: 100%; }
 
 /* En móvil, una sola columna siempre */
 @media (max-width: 640px){
