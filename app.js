@@ -15,7 +15,6 @@ const fmtDuration = (ms) => {
   const s = Math.floor((ms % 60000) / 1000)
   return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
-//function todayStr(){ return fmtDate(Date.now()) }
 function todayStr(){
   const d = new Date()
   d.setHours(0,0,0,0) // quita hora, minuto y segundo
@@ -246,7 +245,7 @@ async function supaDeleteSchedule(id){
 // --- API: Sesiones ---
 async function supaFetchSessionsToday(){
 
-  console.log(todayStr())
+  console.log('Fecha actual:', todayStr())
   const { data, error } = await supa
     .from('sessions')
     .select('*')
@@ -353,15 +352,13 @@ async function getActiveSessionForCurrentUser() {
 
   state.currentWorker = worker; // Guardamos el trabajador actual
 
-  const today = new Date().toISOString().split('T')[0];
-
-  console.log('Fecha de hoy:',today)
+  
   // Buscar la sesión activa (sin end_at)
   const { data: session, error: sessionError } = await supa
     .from('sessions')
     .select('*')
     .eq('worker_id', worker.id)
-    .eq('date', today)
+    .eq('date', todayStr())
     .is('end_at', null)
     .maybeSingle();
 
