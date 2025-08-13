@@ -355,6 +355,7 @@ async function getActiveSessionForCurrentUser() {
 
   const today = new Date().toISOString().split('T')[0];
 
+  console.log('Fecha de hoy:',today)
   // Buscar la sesión activa (sin end_at)
   const { data: session, error: sessionError } = await supa
     .from('sessions')
