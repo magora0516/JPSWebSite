@@ -353,11 +353,14 @@ async function getActiveSessionForCurrentUser() {
 
   state.currentWorker = worker; // Guardamos el trabajador actual
 
+  const today = new Date().toISOString().split('T')[0];
+
   // Buscar la sesión activa (sin end_at)
   const { data: session, error: sessionError } = await supa
     .from('sessions')
     .select('*')
     .eq('worker_id', worker.id)
+    .eq('date', today)
     .is('end_at', null)
     .maybeSingle();
 
