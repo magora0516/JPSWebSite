@@ -483,7 +483,8 @@ function startCountdownIfPlanned(){
     $('#countdown').textContent = fmtDuration(Math.max(left, 0))
     if (left <= 0) $('#countdown').style.color = 'var(--warn)'; else $('#countdown').style.color = 'inherit'
   }
-  tick(); timerHandle = setInterval(tick, 1000)
+  tick()
+  timerHandle = setInterval(tick, 1000)
 }
 
 function startTimeOut(){
@@ -495,14 +496,14 @@ function startTimeOut(){
   
 
   
-  function tick(){
+  function tickDuration(){
     const elapsed = Date.now() - new Date(a.start_at).getTime()
     $('#duration').textContent = fmtDuration(Math.max(elapsed, 0))
     $('#duration').style.color = 'inherit'
   }
 
-  tick()
-  timerHandle = setInterval(tick, 1000)
+  tickDuration()
+  timerHandleDuration = setInterval(tick, 1000)
 
 }
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <!-- Metadatos y recursos -->
   <meta charset="UTF-8" />
@@ -9,14 +10,15 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+
 <body>
   <!-- Encabezado principal -->
   <header>
-    <div class="container">  
+    <div class="container">
       <div class="logo-container">
-      <img src="logo_header.png" alt="Logo de la empresa" style="height:80px;" class="logo" />
+        <img src="logo_header.png" alt="Logo de la empresa" style="height:80px;" class="logo" />
       </div>
-    
+
       <!-- Tarjeta de autenticación de usuario -->
       <div class="card" style="margin-top:12px">
         <div class="auth">
@@ -33,7 +35,7 @@
         </div>
       </div>
 
-      
+
     </div>
   </header>
 
@@ -58,6 +60,10 @@
           <div>
             <label>Cliente</label>
             <select id="workerClient"></select>
+            <label class="filter-today">
+              <input type="checkbox" id="chkOnlyToday">
+              Solo clientes programados hoy
+            </label>
           </div>
           <!-- Botón de iniciar turno ocupa todo el ancho -->
           <button class="ok" id="btnStart">Iniciar turno</button>
@@ -65,7 +71,7 @@
       </div>
 
       <!-- Tarjeta de estado del turno -->
-      <div class="card" id ="cardStatus">
+      <div class="card" id="cardStatus">
         <div class="grid">
           <!-- Estado actual del trabajador -->
           <div class="row">
@@ -73,12 +79,30 @@
             <div class="stat" id="state">Libre</div>
           </div>
           <!-- Horarios y ubicaciones -->
-          <div class="row"><div class="muted">Inicio</div><div id="startAt">—</div></div>
-          <div class="row"><div class="muted">Fin</div><div id="endAt">—</div></div>
-          <div class="row"><div class="muted">Duración</div><div id="duration">—</div></div>
-          <div class="row"><div class="muted">Ubicación inicio</div><div id="locStart">—</div></div>
-          <div class="row"><div class="muted">Ubicación fin</div><div id="locEnd">—</div></div>
-          <div class="row"><div class="muted">Cuenta regresiva</div><div class="timer" id="countdown">00:00:00</div></div>
+          <div class="row">
+            <div class="muted">Inicio</div>
+            <div id="startAt">—</div>
+          </div>
+          <div class="row">
+            <div class="muted">Fin</div>
+            <div id="endAt">—</div>
+          </div>
+          <div class="row">
+            <div class="muted">Duración</div>
+            <div id="duration">—</div>
+          </div>
+          <div class="row">
+            <div class="muted">Ubicación inicio</div>
+            <div id="locStart">—</div>
+          </div>
+          <div class="row">
+            <div class="muted">Ubicación fin</div>
+            <div id="locEnd">—</div>
+          </div>
+          <div class="row">
+            <div class="muted">Cuenta regresiva</div>
+            <div class="timer" id="countdown">00:00:00</div>
+          </div>
           <div style="margin-top:12px;">
             <button class="danger" id="btnStop" disabled>Finalizar servicio</button>
           </div>
@@ -104,7 +128,13 @@
         </div>
         <div class="spacer"></div>
         <table class="list" id="workersTable">
-          <thead><tr><th>Nombre</th><th>Correo</th><th>Acción</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
           <tbody></tbody>
         </table>
       </div>
@@ -125,7 +155,13 @@
         </div>
         <div class="spacer"></div>
         <table class="list" id="clientsTable">
-          <thead><tr><th>Cliente</th><th>Ubicación</th><th>Acción</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Ubicación</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
           <tbody></tbody>
         </table>
       </div>
@@ -156,7 +192,15 @@
         </div>
         <div class="spacer"></div>
         <table class="list" id="schedTable">
-          <thead><tr><th>Fecha</th><th>Trabajador</th><th>Cliente</th><th>Estimado</th><th>Acción</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Trabajador</th>
+              <th>Cliente</th>
+              <th>Estimado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
           <tbody></tbody>
         </table>
       </div>
@@ -180,7 +224,15 @@
       <div class="card" style="grid-column: 1 / -1">
         <h3>Registros de hoy</h3>
         <table class="list" id="logsTable">
-          <thead><tr><th>Trabajador</th><th>Cliente</th><th>Inicio</th><th>Fin</th><th>Duración</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Trabajador</th>
+              <th>Cliente</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Duración</th>
+            </tr>
+          </thead>
           <tbody></tbody>
         </table>
       </div>
@@ -190,4 +242,5 @@
   <!-- Scripts principales -->
   <script src="app.js"></script>
 </body>
+
 </html>

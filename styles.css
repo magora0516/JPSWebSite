@@ -257,3 +257,21 @@ select, button, img, table { max-width: 100%; }
 @media (max-width: 640px){
   .two { grid-template-columns: 1fr; }
 }
+
+/* =========================
+   Checkbox de filtrar clientes de hoy
+   ========================= */
+
+.filter-today {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.filter-today input[type="checkbox"] {
+  transform: scale(1.2);
+  accent-color: var(--primary, #007bff); /* usa el color principal si lo tienes */
+}
