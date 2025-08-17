@@ -263,11 +263,14 @@ select, button, img, table { max-width: 100%; }
    ========================= */
 
 .filter-today {
-  display: contents;
+  display: flex;
+  align-items: center;
+  justify-content: center;  /* centra horizontalmente */
   gap: 6px;
-  margin: 8px 0;
+  margin: 12px auto;        /* margen arriba/abajo y centrado automático */
   font-size: 14px;
   color: #333;
+  text-align: center;
 }
 
 
