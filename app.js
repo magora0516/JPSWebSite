@@ -565,7 +565,7 @@ async function reverseGeocode(lat, lon) {
   url.searchParams.set("lon", lon);
   url.searchParams.set("addressdetails", "1");
   url.searchParams.set("zoom", "18");            // forzar nivel de detalle
-  url.searchParams.set("email", "tu_email@dominio.com"); // identificación
+  url.searchParams.set("email", "services@jpsmagiccleaning.com"); // identificación
 
   const res = await fetch(url.toString(), {
     headers: { "Accept": "application/json" }
@@ -614,8 +614,10 @@ async function startShift() {
     }
     const saved = await supaInsertSession(session)
 
-    console.log('Direccion: ', reverseGeocode(loc?.lat, loc?.lng))
-    
+    reverseGeocode(loc.lat, loc.lng)
+  .then(({ pretty }) => console.log(pretty))
+  .catch(console.error);
+
 
     const finalS = saved || session
     state.activeSession = finalS
