@@ -264,7 +264,6 @@ select, button, img, table { max-width: 100%; }
 
 .filter-today {
   display: contents;
-  align-items: center;
   gap: 6px;
   margin: 8px 0;
   font-size: 14px;
@@ -272,10 +271,12 @@ select, button, img, table { max-width: 100%; }
 }
 
 
-
 .filter-today input[type="checkbox"] {
   width: 20px; /* Set the desired width */
   height: 20px; /* Set the desired height */
   /*transform: scale(1.2);*/
   accent-color: var(--primary, #007bff); /* usa el color principal si lo tienes */
+}
+.filter-block {
+  align-items: center;
 }
