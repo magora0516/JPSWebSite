@@ -263,7 +263,7 @@ select, button, img, table { max-width: 100%; }
    ========================= */
 
 .filter-today {
-  display: flex;
+  display: contents;
   align-items: center;
   gap: 6px;
   margin: 8px 0;
