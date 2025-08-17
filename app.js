@@ -585,8 +585,11 @@ async function reverseGeocode(lat, lon) {
 
   // Toma dirección “bonita” si existe; si no, compón con campos
   const pretty =
-    data.display_name ||
-    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}, ${data.address.country ?? ""}`.replace(/\s+,/g, ",").trim();
+    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} `.replace(/\s+,/g, ",").trim();
+
+  //  data.display_name ||
+  //  `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}, ${data.address.country ?? ""}`.replace(/\s+,/g, ",").trim();
+  //4394, Southwest 10th Place, Lakeview, Deerfield Beach, Broward County, Florida, 33442, United States
 
   return { pretty, raw: data };
 }
@@ -826,7 +829,7 @@ function bindEvents() {
       worker_name: s.worker || wById[s.worker_id]?.name || '',
       client_name: cById[s.client_id]?.name || '',
       loc_start_addr: s.loc_start_addr || '',
-      loc_end_addr:   s.loc_end_addr   || ''
+      loc_end_addr: s.loc_end_addr || ''
     }))
 
     // CSV y descarga
