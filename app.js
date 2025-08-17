@@ -554,7 +554,7 @@ function startTimeOut() {
   }
 
   tickDuration()
-  timerHandleDuration = setInterval(tick, 1000)
+  timerHandleDuration = setInterval(tickDuration, 1000)
 
 }
 
