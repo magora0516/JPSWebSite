@@ -267,7 +267,7 @@ async function supaUpdateSessionEnd(id, end, loc, addr) {
       end_at: end,
       loc_end_lat: loc?.lat,
       loc_end_lng: loc?.lng,
-      loc_end_addr = addr
+      loc_end_addr: addr
     })
     .eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
