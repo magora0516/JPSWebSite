@@ -558,6 +558,29 @@ function ensureGeo(cb) {
   )
 }
 
+async function reverseGeocode(lat, lon) {
+  const url = new URL("https://nominatim.openstreetmap.org/reverse");
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("lat", lat);
+  url.searchParams.set("lon", lon);
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", "18");            // forzar nivel de detalle
+  url.searchParams.set("email", "tu_email@dominio.com"); // identificación
+
+  const res = await fetch(url.toString(), {
+    headers: { "Accept": "application/json" }
+  });
+  if (!res.ok) throw new Error("Error " + res.status);
+  const data = await res.json();
+
+  // Toma dirección “bonita” si existe; si no, compón con campos
+  const pretty =
+    data.display_name ||
+    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}, ${data.address.country ?? ""}`.replace(/\s+,/g, ",").trim();
+
+  return { pretty, raw: data };
+}
+
 
 async function startShift() {
   await refreshSession()
@@ -590,6 +613,9 @@ async function startShift() {
       loc_end_lng: null
     }
     const saved = await supaInsertSession(session)
+
+    console.log('Direccion: ', reverseGeocode(loc?.lat, loc?.lng))
+    
 
     const finalS = saved || session
     state.activeSession = finalS
