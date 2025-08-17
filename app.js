@@ -259,9 +259,17 @@ async function supaInsertSession(s) {
   if (error) { alert('No se pudo iniciar la sesión: ' + error.message); return null }
   return data
 }
-async function supaUpdateSessionEnd(id, end, loc) {
+async function supaUpdateSessionEnd(id, end, loc, addr) {
   console.log('Actualizando sesión', id, 'con fin en', end, 'y loc', loc)
-  const { error } = await supa.from('sessions').update({ end_at: end, loc_end_lat: loc?.lat, loc_end_lng: loc?.lng }).eq('id', id)
+  const { error } = await supa
+    .from('sessions')
+    .update({
+      end_at: end,
+      loc_end_lat: loc?.lat,
+      loc_end_lng: loc?.lng,
+      loc_end_addr = addr
+    })
+    .eq('id', id)
   if (error) { alert('No se pudo finalizar la sesión: ' + error.message) }
 }
 
@@ -301,7 +309,7 @@ function downloadCsv(filename, csvText) {
 
 function buildSessionsCsv(rows) {
   const headers = [
-    'date', 'worker_name', 'client_name', 'duration_hms', 'loc_start_url', 'loc_end_url'
+    'date', 'worker_name', 'client_name', 'duration_hms', 'loc_start_addr', 'loc_end_addr', 'loc_start_url', 'loc_end_url'
   ]
   const lines = [headers.join(',')]
 
@@ -315,6 +323,8 @@ function buildSessionsCsv(rows) {
       r.worker_name || '',
       r.client_name || '',
       dur,
+      r.loc_start_addr || '',
+      r.loc_end_addr || '',
       startUrl,
       endUrl
     ].map(csvEscape).join(','))
@@ -581,6 +591,16 @@ async function reverseGeocode(lat, lon) {
   return { pretty, raw: data };
 }
 
+// helper de timeout para promesas
+// (para evitar que se cuelgue la app si no responde el servidor)
+async function withTimeout(promise, ms = 5000) {
+  return Promise.race([
+    promise,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))
+  ])
+}
+
+
 
 async function startShift() {
   await refreshSession()
@@ -599,6 +619,13 @@ async function startShift() {
   if (!worker) { alert('Trabajador inválido'); return }
 
   ensureGeo(async loc => {
+    let locStartAddr = null
+    if (loc) {
+      try {
+        const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
+        locStartAddr = rev?.pretty || null
+      } catch (err) { /*ignora errores de geocodificación*/ }
+    }
     const session = {
       id: uid(),
       worker: worker.name,
@@ -609,15 +636,12 @@ async function startShift() {
       end_at: null,
       loc_start_lat: loc?.lat ?? null,
       loc_start_lng: loc?.lng ?? null,
+      loc_start_addr: locStartAddr,
       loc_end_lat: null,
-      loc_end_lng: null
+      loc_end_lng: null,
+      loc_end_addr: null
     }
     const saved = await supaInsertSession(session)
-
-    reverseGeocode(loc.lat, loc.lng)
-  .then(({ pretty }) => console.log(pretty))
-  .catch(console.error);
-
 
     const finalS = saved || session
     state.activeSession = finalS
@@ -633,11 +657,20 @@ async function stopShift() {
   if (!a) return
   ensureGeo(async loc => {
     const end = new Date().toISOString()
-    console.log('Finalizando sesión', a.id, 'a las', end, 'con loc', loc)
-    await supaUpdateSessionEnd(a.id, end, loc)
+    let endAddr = null
+    if (loc) {
+      try {
+        const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
+        endAddr = rev?.pretty || null
+      } catch (err) { /*ignora errores de geocodificación*/ }
+    }
+    console.log('Finalizando sesión', a.id, 'a las', end, 'en la direccion', endAddr)
+    await supaUpdateSessionEnd(a.id, end, loc, endAddr)
     a.end_at = end
     a.loc_end_lat = loc?.lat || null
     a.loc_end_lng = loc?.lng || null
+    a.loc_end_addr = endAddr || null
+    // Actualizar estado global
     state.activeSession = null
     renderWorkerPanel(); clearTimer()
     const todaySessions = await supaFetchSessionsToday(); renderLogs(todaySessions)
@@ -791,7 +824,9 @@ function bindEvents() {
     const rows = sessions.map(s => ({
       ...s,
       worker_name: s.worker || wById[s.worker_id]?.name || '',
-      client_name: cById[s.client_id]?.name || ''
+      client_name: cById[s.client_id]?.name || '',
+      loc_start_addr: s.loc_start_addr || '',
+      loc_end_addr:   s.loc_end_addr   || ''
     }))
 
     // CSV y descarga
