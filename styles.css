@@ -272,7 +272,11 @@ select, button, img, table { max-width: 100%; }
   color: #333;
 }
 
+
+
 .filter-today input[type="checkbox"] {
-  transform: scale(1.2);
+  width: 20px; /* Set the desired width */
+  height: 20px; /* Set the desired height */
+  /*transform: scale(1.2);*/
   accent-color: var(--primary, #007bff); /* usa el color principal si lo tienes */
 }
