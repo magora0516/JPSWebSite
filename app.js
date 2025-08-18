@@ -464,20 +464,16 @@ function renderWorkerPanel() {
   if (!a) {
     $('#state').textContent = 'Libre'
     $('#startAt').textContent = '—'
-    $('#endAt').textContent = '—'
     $('#duration').textContent = '00:00:00'
     $('#locStart').textContent = '—'
-    $('#locEnd').textContent = '—'
     $('#countdown').textContent = '00:00:00'
     toggleShiftCards()
     return
   }
   $('#state').textContent = 'En servicio'
   $('#startAt').textContent = fmtDateTime(a.start_at)
-  $('#endAt').textContent = a.end_at ? fmtDateTime(a.end_at) : '—'
   const durMs = (a.end_at ? new Date(a.end_at) : new Date()) - new Date(a.start_at)
   $('#locStart').textContent = a.loc_start_addr ? a.loc_start_addr : '—'
-  $('#locEnd').textContent = a.loc_end_addr ? a.loc_end_addr : '—'
   //$('#duration').textContent = fmtDuration(durMs)
   //$('#locStart').textContent = a.loc_start_lat ? `${a.loc_start_lat.toFixed(5)}, ${a.loc_start_lng.toFixed(5)}` : '—'
   //$('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
