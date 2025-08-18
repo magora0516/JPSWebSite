@@ -585,7 +585,7 @@ async function reverseGeocode(lat, lon) {
 
   // Toma dirección “bonita” si existe; si no, compón con campos
   const pretty =
-    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} `.replace(/\s+,/g, ",").trim();
+    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? "" }`.replace(/\s+,/g, ",").trim();
 
   //  data.display_name ||
   //  `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}, ${data.address.country ?? ""}`.replace(/\s+,/g, ",").trim();
