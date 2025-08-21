@@ -1,0 +1,110 @@
+:root {
+    --max: 1100px;
+    --gap: 12px;
+    --primary: #2563eb;
+    --danger: #b91c1c;
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    color: #222
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    max-width: var(--max);
+    margin: 0 auto
+}
+
+.topbar h1 {
+    font-size: 18px;
+    margin: 0
+}
+
+.btn-link {
+    color: var(--primary);
+    text-decoration: none;
+    padding: 6px 8px;
+    border: 1px solid #dbeafe;
+    border-radius: 6px
+}
+
+main {
+    max-width: var(--max);
+    margin: 12px auto;
+    padding: 0 var(--gap)
+}
+
+#calendar .fc-toolbar-title {
+    font-size: 18px
+}
+
+dialog {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .15);
+    padding: 16px;
+    max-width: 420px;
+    width: 100%
+}
+
+dialog form {
+    display: grid;
+    gap: 10px
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px
+}
+
+label {
+    font-size: 12px;
+    color: #444
+}
+
+input,
+select,
+button {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    width: 100%
+}
+
+menu {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin: 0;
+    padding: 0
+}
+
+button.primary {
+    background: var(--primary);
+    color: #fff;
+    border-color: transparent
+}
+
+button.danger {
+    background: var(--danger);
+    color: #fff;
+    border-color: transparent
+}
+
+@media (max-width:640px) {
+    .grid-2 {
+        grid-template-columns: 1fr
+    }
+}
