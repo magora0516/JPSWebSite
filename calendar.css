@@ -1,7 +1,7 @@
 :root {
     --max: 1100px;
     --gap: 12px;
-    --primary: #2563eb;
+    --primary: #0f62fe;
     --danger: #b91c1c;
 }
 
@@ -47,6 +47,31 @@ main {
 #calendar .fc-toolbar-title {
     font-size: 18px
 }
+
+/* Botones de FullCalendar */
+.fc .fc-button {
+  background-color: var(--primary);   /* tu color principal */
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Hover y focus */
+.fc .fc-button:hover,
+.fc .fc-button:focus {
+  background-color: var(--primary); /* un azul más oscuro */
+  outline: none;
+}
+
+/* Botón deshabilitado */
+.fc .fc-button:disabled {
+  background-color: #9ca3af; /* gris neutro */
+  cursor: not-allowed;
+}
+
 
 dialog {
     border: none;
