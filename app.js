@@ -788,6 +788,12 @@ function bindEvents() {
     }
   })
 
+  //btn calendario
+  $('#btnCalendar')?.addEventListener('click', () => {
+    window.location.href = 'calendar.html'
+  })
+  
+
   // Shifts
   $('#btnStart').addEventListener('click', startShift)
   $('#btnStop').addEventListener('click', stopShift)
