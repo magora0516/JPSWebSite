@@ -115,7 +115,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
     if (mode === 'create' && dateInfo) {
         title.textContent = 'Nueva agenda'
         $('#dlgDate').value = dateInfo.dateStr
-        $('#dlgTime').value = '09:00'
+        //$('#dlgTime').value = '09:00'
         del.style.display = 'none'
         dlg.showModal()
         $('#btnCancel').onclick = () => dlg.close('cancel')
@@ -124,7 +124,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
             const workerId = $('#dlgWorker').value
             const clientId = $('#dlgClient').value
             const date = $('#dlgDate').value
-            const time = $('#dlgTime').value
+            //const time = $('#dlgTime').value
             const minutes = parseInt($('#dlgMinutes').value, 10) || 60
             if (!workerId || !clientId) { alert('Trabajador y cliente son obligatorios'); return }
             const worker = state.workers.find(w => w.id === workerId)
@@ -146,7 +146,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
         $('#dlgWorker').value = s.worker_id || ''
         $('#dlgClient').value = s.client_id || ''
         $('#dlgDate').value = s.date
-        $('#dlgTime').value = '09:00'
+        //$('#dlgTime').value = '09:00'
         $('#dlgMinutes').value = s.minutes || 60
         del.style.display = 'inline-block'
         dlg.showModal()
@@ -161,7 +161,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
             const workerId = $('#dlgWorker').value
             const clientId = $('#dlgClient').value
             const date = $('#dlgDate').value
-            const time = $('#dlgTime').value
+            //const time = $('#dlgTime').value
             const minutes = parseInt($('#dlgMinutes').value, 10) || 60
             if (!workerId || !clientId) { alert('Trabajador y cliente son obligatorios'); return }
             const worker = state.workers.find(w => w.id === workerId)
