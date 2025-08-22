@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,6 +10,7 @@
   <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 </head>
+
 <body>
   <header class="topbar">
     <div class="left">
@@ -35,16 +37,11 @@
       <label>Cliente</label>
       <select id="dlgClient"></select>
 
-      <div class="grid-2">
-        <div>
-          <label>Fecha</label>
-          <input type="date" id="dlgDate" required>
-        </div>
-        <!-- <div>
-          <label>Hora</label>
-          <input type="time" id="dlgTime" required>
-        </div> -->
+      <div>
+        <label>Fecha</label>
+        <input type="date" id="dlgDate" required>
       </div>
+
 
       <label>Duración (min)</label>
       <input type="number" id="dlgMinutes" min="5" max="480" value="60">
@@ -61,4 +58,5 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="calendar.js"></script>
 </body>
+
 </html>
