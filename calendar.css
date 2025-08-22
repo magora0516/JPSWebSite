@@ -68,7 +68,7 @@ main {
 
 #btnVolver {
     background-color: var(--primary, #2563eb);
-    width: 20%;
+    width: 50%;
     color: #fff;
     border: none;
     padding: 8px 14px;
