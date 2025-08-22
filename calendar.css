@@ -18,12 +18,30 @@ body {
 .topbar {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     padding: 12px;
     border-bottom: 1px solid #eee;
     max-width: var(--max);
     margin: 0 auto
 }
+
+.topbar .left {
+    flex: 1;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .topbar .center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .topbar .right {
+    flex: 1;
+  }
+  
+
 
 .topbar h1 {
     font-size: 18px;
