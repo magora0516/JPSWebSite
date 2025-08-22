@@ -158,7 +158,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
 
 //btn Index
 $('#btnVolver')?.addEventListener('click', () => {
-  window.location.href = 'index.html'
+    window.location.href = 'index.html'
 })
 
 // FullCalendar init
@@ -170,25 +170,26 @@ async function init() {
 
     const el = document.getElementById('calendar')
 
-    calendar = new FullCalendar.Calendar(el, {
-        initialView: 'dayGridMonth',
-        headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-        height: 'auto',
-        selectable: true,
-        selectMirror: true,
-        navLinks: true,
-        locale: 'es',
-        dateClick: (info) => openDialog('create', info, null),
-        eventClick: (info) => openDialog('edit', null, info),
-        events: async (info, success, failure) => {
-            try {
-                const startYmd = fmtYmd(info.start)
-                const endYmd = fmtYmd(info.end)
-                const rows = await fetchSchedulesRange(startYmd, endYmd)
-                success(schedulesToEvents(rows))
-            } catch (e) { console.error(e); failure(e) }
-        }
-    })
-    calendar.render()
+    
+calendar = new FullCalendar.Calendar(el, {
+    initialView: 'dayGridMonth',
+    headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+    height: 'auto',
+    selectable: true,
+    selectMirror: true,
+    navLinks: false,  // desactiva navegación
+    locale: 'es',
+    dateClick: (info) => openDialog('create', info, null),
+    eventClick: (info) => openDialog('edit', null, info),
+    events: async (info, success, failure) => {
+        try {
+            const startYmd = fmtYmd(info.start)
+            const endYmd = fmtYmd(info.end)
+            const rows = await fetchSchedulesRange(startYmd, endYmd)
+            success(schedulesToEvents(rows))
+        } catch (e) { console.error(e); failure(e) }
+    }
+})
+calendar.render()
 }
 init()
