@@ -155,6 +155,11 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
     }
 }
 
+//btn Index
+$('#btnVolver')?.addEventListener('click', () => {
+  window.location.href = 'index.html'
+})
+
 // FullCalendar init
 let calendar = null
 async function init() {

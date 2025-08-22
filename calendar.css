@@ -48,6 +48,19 @@ main {
     font-size: 18px
 }
 
+#btnVolver {
+    background-color: var(--primary, #2563eb);
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #btnVolver:hover {
+    background-color: #1e40af; /* un azul más oscuro */
+  }
+
 /* Botones de FullCalendar */
 .fc .fc-button {
   background-color: var(--primary);   /* tu color principal */
