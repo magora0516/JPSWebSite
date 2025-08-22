@@ -68,7 +68,7 @@ function fillSelects() {
 }
 
 // map schedules → events
-function schedulesToEvents(rows) {
+/* function schedulesToEvents(rows) {
     return rows.map(r => {
         // usamos 09:00 por defecto si no tenemos hora; en diálogo sí la pedimos
         const dateStr = r.date
@@ -87,7 +87,24 @@ function schedulesToEvents(rows) {
             extendedProps: { sched: r }
         }
     })
+} */
+
+function schedulesToEvents(rows) {
+    return rows.map(r => {
+        const clientName = state.clients.find(c => c.id === r.client_id)?.name || 'Cliente'
+        const color = state.colorByWorker[r.worker_id] || '#64748b'
+        return {
+            id: r.id,
+            title: clientName,           // ← solo cliente
+            start: r.date,               // ← sin hora => evento de día completo
+            allDay: true,                // ← asegura que sea all-day
+            backgroundColor: color,
+            borderColor: color,
+            extendedProps: { sched: r, workerId: r.worker_id }
+        }
+    })
 }
+
 
 // Modal helpers
 function openDialog(mode, dateInfo = null, eventInfo = null) {
@@ -170,26 +187,27 @@ async function init() {
 
     const el = document.getElementById('calendar')
 
-    
-calendar = new FullCalendar.Calendar(el, {
-    initialView: 'dayGridMonth',
-    headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-    height: 'auto',
-    selectable: true,
-    selectMirror: true,
-    navLinks: false,  // desactiva navegación
-    locale: 'es',
-    dateClick: (info) => openDialog('create', info, null),
-    eventClick: (info) => openDialog('edit', null, info),
-    events: async (info, success, failure) => {
-        try {
-            const startYmd = fmtYmd(info.start)
-            const endYmd = fmtYmd(info.end)
-            const rows = await fetchSchedulesRange(startYmd, endYmd)
-            success(schedulesToEvents(rows))
-        } catch (e) { console.error(e); failure(e) }
-    }
-})
-calendar.render()
+
+    calendar = new FullCalendar.Calendar(el, {
+        initialView: 'dayGridMonth',
+        headerToolbar: { left: 'prev', center: 'title', right: 'next' },
+        height: 'auto',
+        selectable: true,
+        selectMirror: true,
+        navLinks: false,  // desactiva navegación
+        locale: 'es',
+        displayEventTime: false,
+        dateClick: (info) => openDialog('create', info, null),
+        eventClick: (info) => openDialog('edit', null, info),
+        events: async (info, success, failure) => {
+            try {
+                const startYmd = fmtYmd(info.start)
+                const endYmd = fmtYmd(info.end)
+                const rows = await fetchSchedulesRange(startYmd, endYmd)
+                success(schedulesToEvents(rows))
+            } catch (e) { console.error(e); failure(e) }
+        }
+    })
+    calendar.render()
 }
 init()
