@@ -101,6 +101,7 @@ function openDialog(mode, dateInfo = null, eventInfo = null) {
         $('#dlgTime').value = '09:00'
         del.style.display = 'none'
         dlg.showModal()
+        $('#btnCancel').onclick = () => dlg.close('cancel')
         form.onsubmit = async (e) => {
             e.preventDefault()
             const workerId = $('#dlgWorker').value
