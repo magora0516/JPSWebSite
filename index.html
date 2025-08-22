@@ -8,6 +8,12 @@
   <title>Registro de horas – JPs MagicCleaning</title>
   <link rel="icon" type="image/png" href="logo_32px.png">
   <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="JPs Magic Cleaning">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -114,7 +120,7 @@
           <button id="btnCalendar" class="btn-link">Calendario</button>
         </div>
         <div class="spacer"></div>
-        
+
       </div>
 
 
@@ -248,6 +254,12 @@
 
   <!-- Scripts principales -->
   <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js");
+    }
+  </script>
+
 </body>
 
 <footer style="font-size: 12px; text-align: center; margin-top: 20px;">
