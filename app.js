@@ -410,18 +410,6 @@ function renderWorkers() {
     tbody.appendChild(tr)
   })
 }
-/* function renderClients() {
-  const tbody = $('#clientsTable tbody')
-  tbody.innerHTML = ''
-  state.clients.forEach(c => {
-    const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${c.name}</td><td>${c.location || ''}</td><td><button class="ghost" data-id="${c.id}">Eliminar</button></td>`
-    tbody.appendChild(tr)
-  })
-  const clientOpts = ['<option value="">Selecciona un cliente</option>'].concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
-  $('#workerClient').innerHTML = clientOpts
-  $('#schedClient').innerHTML = clientOpts
-} */
 
 function renderClients() {
   const tbody = $('#clientsTable tbody'); if (!tbody) return
