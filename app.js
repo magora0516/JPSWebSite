@@ -793,7 +793,9 @@ function bindEvents() {
   $('#btnCalendar')?.addEventListener('click', () => {
     window.location.href = 'calendar.html'
   })
-  $('btnClients')?.addEventListener('click', () => {
+
+  //btn clientes
+  $('#btnClients')?.addEventListener('click', () => {
     window.location.href = 'clients.html'
   })
 
