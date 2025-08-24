@@ -110,7 +110,7 @@ async function signIn() {
 
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); renderClients()
+  state.clients = await supaFetchClients(); //renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
@@ -136,7 +136,7 @@ async function signUp() {
 
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); renderClients()
+  state.clients = await supaFetchClients(); //renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
@@ -179,7 +179,7 @@ async function signOut() {
   state.workers = []
   state.clients = []
   fillWorkerSelects()
-  renderClients()
+  //renderClients()
   await refreshSession()
 }
 
@@ -216,15 +216,15 @@ async function supaFetchClients() {
   if (error) { console.warn('supaFetchClients', error); return [] }
   return data || []
 }
-async function supaInsertClient(client) {
+/* async function supaInsertClient(client) {
   const { data, error } = await supa.from('clients').insert(client).select().single()
   if (error) { alert('No se pudo guardar el cliente: ' + error.message); return null }
   return data
-}
-async function supaDeleteClient(id) {
+} */
+/* async function supaDeleteClient(id) {
   const { error } = await supa.from('clients').delete().eq('id', id)
   if (error) { alert('No se pudo eliminar el cliente: ' + error.message) }
-}
+} */
 
 // --- API: Agendas ---
 async function supaFetchSchedules() {
@@ -411,7 +411,7 @@ function renderWorkers() {
   })
 }
 
-function renderClients() {
+/* function renderClients() {
   const tbody = $('#clientsTable tbody'); if (!tbody) return
   tbody.innerHTML = ''
   state.clients.forEach(c => {
@@ -429,7 +429,7 @@ function renderClients() {
       .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
     schedClient.innerHTML = clientOpts
   }
-}
+} */
 
 
 function renderSchedules() {
@@ -727,7 +727,7 @@ function bindEvents() {
   })
 
   // Clients
-  $('#btnAddClient').addEventListener('click', async () => {
+  /* $('#btnAddClient').addEventListener('click', async () => {
     await refreshSession()
     if (!state.isAdmin) { alert('Solo admin'); return }
     const name = $('#clientName').value.trim()
@@ -751,7 +751,7 @@ function bindEvents() {
       state.schedules = state.schedules.filter(s => s.client_id !== id)
       renderClients(); renderSchedules(); renderLogs(await supaFetchSessionsToday())
     }
-  })
+  }) */
 
   // Schedules
   $('#btnSchedule').addEventListener('click', async () => {
@@ -858,7 +858,7 @@ function initForms() { $('#schedDate').value = todayStr() }
 async function init() {
   setToday(); initTabs(); bindEvents(); initForms();
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); renderClients()
+  state.clients = await supaFetchClients(); //renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
   renderLogs(await supaFetchSessionsToday())
@@ -871,7 +871,7 @@ document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') {
     renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
     state.workers = await supaFetchWorkers(); renderWorkers()
-    state.clients = await supaFetchClients(); renderClients()
+    state.clients = await supaFetchClients(); //renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
     renderLogs(await supaFetchSessionsToday())
     console.log('Página visible, actualizando datos...')
