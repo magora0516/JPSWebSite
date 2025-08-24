@@ -110,7 +110,7 @@ async function signIn() {
 
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); //renderClients()
+  state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
@@ -136,7 +136,7 @@ async function signUp() {
 
   // --- Cargar listas y actualizar panel tras iniciar sesión ---
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); //renderClients()
+  state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
 
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
@@ -179,7 +179,7 @@ async function signOut() {
   state.workers = []
   state.clients = []
   fillWorkerSelects()
-  //renderClients()
+  renderClients()
   await refreshSession()
 }
 
@@ -411,15 +411,7 @@ function renderWorkers() {
   })
 }
 
-/* function renderClients() {
-  const tbody = $('#clientsTable tbody'); if (!tbody) return
-  tbody.innerHTML = ''
-  state.clients.forEach(c => {
-    const tr = document.createElement('tr')
-    tr.innerHTML = `<td>${c.name}</td><td>${c.location || ''}</td><td><button class="ghost" data-id="${c.id}">Eliminar</button></td>`
-    tbody.appendChild(tr)
-  })
-  // antes llenabas workerClient aquí; ahora:
+ function renderClients() {
   renderWorkerClientSelect()
 
   // si quieres que en admin siga viendo todos:
@@ -429,7 +421,7 @@ function renderWorkers() {
       .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
     schedClient.innerHTML = clientOpts
   }
-} */
+} 
 
 
 function renderSchedules() {
@@ -858,7 +850,7 @@ function initForms() { $('#schedDate').value = todayStr() }
 async function init() {
   setToday(); initTabs(); bindEvents(); initForms();
   state.workers = await supaFetchWorkers(); renderWorkers()
-  state.clients = await supaFetchClients(); //renderClients()
+  state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
   await isSessionActiveForUser(); renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
   renderLogs(await supaFetchSessionsToday())
@@ -871,7 +863,7 @@ document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible') {
     renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut(); await refreshSession()
     state.workers = await supaFetchWorkers(); renderWorkers()
-    state.clients = await supaFetchClients(); //renderClients()
+    state.clients = await supaFetchClients(); renderClients()
     state.schedules = await supaFetchSchedules(); renderSchedules()
     renderLogs(await supaFetchSessionsToday())
     console.log('Página visible, actualizando datos...')
