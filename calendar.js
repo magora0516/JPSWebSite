@@ -67,27 +67,6 @@ function fillSelects() {
     ).join('')
 }
 
-// map schedules → events
-/* function schedulesToEvents(rows) {
-    return rows.map(r => {
-        // usamos 09:00 por defecto si no tenemos hora; en diálogo sí la pedimos
-        const dateStr = r.date
-        const start = `${dateStr}T09:00:00`
-        const durationMin = r.minutes ?? 60
-        const end = new Date(`${dateStr}T09:00:00Z`)
-        const endLoc = new Date(end.getTime() + durationMin * 60000)
-        const workerName = r.worker || (state.workers.find(w => w.id === r.worker_id)?.name) || 'Trabajador'
-        return {
-            id: r.id,
-            title: `${workerName} · ${state.clients.find(c => c.id === r.client_id)?.name || 'Cliente'}`,
-            start: start,
-            end: `${dateStr}T${String(endLoc.getUTCHours()).padStart(2, '0')}:${String(endLoc.getUTCMinutes()).padStart(2, '0')}:00`,
-            backgroundColor: state.colorByWorker[r.worker_id] || '#64748b',
-            borderColor: state.colorByWorker[r.worker_id] || '#64748b',
-            extendedProps: { sched: r }
-        }
-    })
-} */
 
 function schedulesToEvents(rows) {
     return rows.map(r => {

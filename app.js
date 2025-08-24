@@ -228,7 +228,20 @@ async function supaDeleteClient(id) {
 
 // --- API: Agendas ---
 async function supaFetchSchedules() {
-  const { data, error } = await supa.from('schedules').select('*').order('date', { ascending: true })
+  const today = new Date()
+  const tomorrow = new Date()
+  tomorrow.setDate(today.getDate() + 1)
+
+  const fmt = d => d.toISOString().split('T')[0]
+  const todayStr = fmt(today)
+  const tomorrowStr = fmt(tomorrow)
+
+  const { data, error } = await supa
+    .from('schedules')
+    .select('*')
+    .gte('date', todayStr)     // mayor o igual a hoy
+    .lte('date', tomorrowStr)  // menor o igual a mañana
+    .order('date', { ascending: true })
   if (error) { console.warn('supaFetchSchedules', error); return [] }
   return data || []
 }
@@ -583,7 +596,7 @@ async function reverseGeocode(lat, lon) {
 
   // Toma dirección “bonita” si existe; si no, compón con campos
   const pretty =
-    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? "" }`.replace(/\s+,/g, ",").trim();
+    `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}`.replace(/\s+,/g, ",").trim();
 
   //  data.display_name ||
   //  `${data.address.house_number ?? ""} ${data.address.road ?? ""}, ${data.address.city ?? data.address.town ?? data.address.village ?? ""}, ${data.address.state ?? ""} ${data.address.postcode ?? ""}, ${data.address.country ?? ""}`.replace(/\s+,/g, ",").trim();
@@ -792,7 +805,7 @@ function bindEvents() {
   $('#btnCalendar')?.addEventListener('click', () => {
     window.location.href = 'calendar.html'
   })
-  
+
 
   // Shifts
   $('#btnStart').addEventListener('click', startShift)
