@@ -133,7 +133,7 @@ button {
 .ghost { background: #fff; border: 1px solid var(--border); }
 
 
-#btnCalendar #btnClients {
+#btnCalendar, #btnClients {
   background-color: var(--primary, #2563eb);
   color: #fff;
   border: none;
@@ -142,7 +142,7 @@ button {
   cursor: pointer;
   font-size: 14px;
 }
-#btnCalendar:hover #btnClients:hover {
+#btnCalendar:hover, #btnClients:hover {
   background-color: #1e40af; /* un azul más oscuro */
 }
 
