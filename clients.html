@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes</title>
+    <link rel="stylesheet" href="clients.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="left">
+            <button id="btnVolver" class="btn-link">Volver</button>
+        </div>
+        <div class="center">
+            <h1>Clientes</h1>
+        </div>
+        <div class="right"></div>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h3>Nuevo cliente</h3>
+            <form id="formNew" class="grid">
+                <label>Nombre visible<input id="name" required></label>
+                <label>Nombre formal<input id="formal_name"></label>
+                <label>Ubicación<input id="location"></label>
+                <label>Frecuencia
+                    <select id="frequency">
+                        <option value="">—</option>
+                        <option>Monthly</option>
+                        <option>Biweekly</option>
+                        <option>Weekly</option>
+                        <option>Occasional</option>
+                    </select>
+                </label>
+                <label>Pies cuadrados<input id="square_feet" type="number" min="0" step="1"></label>
+                <label>Valor del servicio<input id="service_value" type="number" min="0" step="0.01"></label>
+                <label>Tipo de cliente
+                    <select id="client_type">
+                        <option value="">—</option>
+                        <option>Homecleaning</option>
+                        <option>Office cleaning</option>
+                        <option>Clinic Cleaning</option>
+                        <option>Other</option>
+                    </select>
+                </label>
+                <label>Fecha de inicio<input id="start_date" type="date"></label>
+                <div class="actions">
+                    <button class="primary" type="submit">Guardar</button>
+                    <button type="reset">Limpiar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h3>Listado</h3>
+            <div class="table-wrap">
+                <table class="list" id="tblClients">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Formal</th>
+                            <th>Frecuencia</th>
+                            <th>Tipo</th>
+                            <th>Pies²</th>
+                            <th>Valor</th>
+                            <th>Inicio</th>
+                            <th>Ubicación</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="dlgEdit">
+        <form id="formEdit" method="dialog" class="grid">
+            <h3>Editar cliente</h3>
+            <input type="hidden" id="e_id">
+            <label>Nombre visible<input id="e_name" required></label>
+            <label>Nombre formal<input id="e_formal_name"></label>
+            <label>Ubicación<input id="e_location"></label>
+            <label>Frecuencia
+                <select id="e_frequency">
+                    <option value="">—</option>
+                    <option>Monthly</option>
+                    <option>Biweekly</option>
+                    <option>Weekly</option>
+                    <option>Occasional</option>
+                </select>
+            </label>
+            <label>Pies cuadrados<input id="e_square_feet" type="number" min="0" step="1"></label>
+            <label>Valor del servicio<input id="e_service_value" type="number" min="0" step="0.01"></label>
+            <label>Tipo de cliente
+                <select id="e_client_type">
+                    <option value="">—</option>
+                    <option>Homecleaning</option>
+                    <option>Office cleaning</option>
+                    <option>Clinic Cleaning</option>
+                    <option>Other</option>
+                </select>
+            </label>
+            <label>Fecha de inicio<input id="e_start_date" type="date"></label>
+            <menu>
+                <button type="button" id="btnDel" class="danger">Eliminar</button>
+                <button type="button" id="btnCancel">Cancelar</button>
+                <button type="submit" class="primary">Guardar</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="clients.js"></script>
+</body>
+
+</html>
