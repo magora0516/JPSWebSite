@@ -36,7 +36,7 @@ const state = {
   schedules: [],
   activeSession: null,
   currentWorker: [],
-  startingShift: false 
+  startingShift: false
 }
 
 
@@ -220,16 +220,16 @@ async function supaFetchClients() {
 }
 
 
-function ymdLocal(d){
+function ymdLocal(d) {
   const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
 
 // --- API: Agendas ---
 async function supaFetchSchedules() {
-  const today = new Date(); today.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
 
   const todayStr = ymdLocal(today);
@@ -415,7 +415,7 @@ function renderWorkers() {
   })
 }
 
- function renderClients() {
+function renderClients() {
   renderWorkerClientSelect()
 
   // si quieres que en admin siga viendo todos:
@@ -425,7 +425,7 @@ function renderWorkers() {
       .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
     schedClient.innerHTML = clientOpts
   }
-} 
+}
 
 
 function renderSchedules() {
@@ -471,7 +471,7 @@ function renderWorkerPanel() {
   $('#startAt').textContent = fmtDateTime(a.start_at)
   const durMs = (a.end_at ? new Date(a.end_at) : new Date()) - new Date(a.start_at)
   $('#locStart').textContent = a.loc_start_addr ? a.loc_start_addr : '—'
-  
+
   toggleShiftCards()
 }
 
@@ -598,16 +598,8 @@ async function withTimeout(promise, ms = 5000) {
 }
 
 
-async function startShift() {
 
-  if (state.startingShift) return                 // ← ignora toques repetidos
-  state.startingShift = true
-  const btn = $('#btnStart')
-  if (btn) { btn.disabled = true; btn.dataset.prev = btn.textContent; btn.textContent = 'Iniciando…' }
-
-  try {
-
-
+/* async function startShift() {
   await refreshSession()
   const clientId = $('#workerClient').value
   if (!clientId) { alert('Selecciona un cliente'); return }
@@ -623,70 +615,100 @@ async function startShift() {
   }
   if (!worker) { alert('Trabajador inválido'); return }
 
-  const loc = await new Promise(res => ensureGeo(res))
-
-  /* ensureGeo(async loc => {
+  ensureGeo(async loc => {
     let locStartAddr = null
     if (loc) {
       try {
         const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
         locStartAddr = rev?.pretty || null
       } catch (err) { /*ignora errores de geocodificación }
-    }*/
-
-  const session = {
-    id: uid(),
-    worker: worker.name,
-    worker_id: worker.id,
-    client_id: clientId,
-    date: todayStr(),
-    start_at: new Date().toISOString(),
-    end_at: null,
-    loc_start_lat: loc?.lat ?? null,
-    loc_start_lng: loc?.lng ?? null,
-    loc_start_addr: null,          // se completa después
-    loc_end_lat: null,
-    loc_end_lng: null,
-    loc_end_addr: null
-  }
-
-  // intenta insertar
-
+    }
+    const session = {
+      id: uid(),
+      worker: worker.name,
+      worker_id: worker.id,           // RLS depende de esto
+      client_id: clientId,
+      date: todayStr(),
+      start_at: new Date().toISOString(),
+      end_at: null,
+      loc_start_lat: loc?.lat ?? null,
+      loc_start_lng: loc?.lng ?? null,
+      loc_start_addr: locStartAddr,
+      loc_end_lat: null,
+      loc_end_lng: null,
+      loc_end_addr: null
+    }
     const saved = await supaInsertSession(session)
 
-    // si hubo colisión por duplicado, reuse la activa existente
-    if (!saved) {
-      const { data: existing } = await supa
-        .from('sessions')
-        .select('*')
-        .eq('worker_id', worker.id)
-        .eq('client_id', clientId)
-        .eq('date', todayStr())
-        .is('end_at', null)
-        .maybeSingle()
-      state.activeSession = existing || session
-    } else {
-      state.activeSession = saved
-    }
-    const last7 = await supaFetchSessionsLast7Days()
-    renderLogs(last7)
+    const finalS = saved || session
+    state.activeSession = finalS
+    renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
+    const todaySessions = await supaFetchSessionsToday();
+    renderLogs(todaySessions)
+  })
+} */
 
-    // completa dirección después, sin bloquear
-    if (loc) {
-      try {
-        const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
-        if (rev?.pretty) {
-          await supa.from('sessions').update({ loc_start_addr: rev.pretty }).eq('id', state.activeSession.id)
-          state.activeSession.loc_start_addr = rev.pretty
-          renderWorkerPanel()
-        }
-      } catch (_) { /* sin efecto si falla */ }
+async function startShift() {
+  if (state.startingShift) return
+  state.startingShift = true
+  const btn = $('#btnStart')
+  if (btn) { btn.disabled = true; btn.textContent = 'Iniciando…' }
+
+  try {
+    await refreshSession()
+    const clientId = $('#workerClient').value
+    if (!clientId) { alert('Selecciona un cliente'); return }
+
+    let worker
+    if (state.isAdmin) {
+      const workerId = $('#workerSel').value
+      if (!workerId) { alert('Selecciona un trabajador'); return }
+      worker = state.workers.find(w => w.id === workerId)
+    } else {
+      if (!state.currentWorker) { await ensureCurrentWorker() }
+      worker = state.currentWorker
     }
+    if (!worker) { alert('Trabajador inválido'); return }
+
+    ensureGeo(async loc => {
+      let locStartAddr = null
+      if (loc) {
+        try {
+          const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
+          locStartAddr = rev?.pretty || null
+        } catch (_) {}
+      }
+      const session = {
+        id: uid(),
+        worker: worker.name,
+        worker_id: worker.id,
+        client_id: clientId,
+        date: todayStr(),
+        start_at: new Date().toISOString(),
+        end_at: null,
+        loc_start_lat: loc?.lat ?? null,
+        loc_start_lng: loc?.lng ?? null,
+        loc_start_addr: locStartAddr,
+        loc_end_lat: null,
+        loc_end_lng: null,
+        loc_end_addr: null
+      }
+
+      const saved = await supaInsertSession(session)
+      const finalS = saved || session
+      state.activeSession = finalS
+      renderWorkerPanel()
+      startCountdownIfPlanned()
+      startTimeOut()
+      const todaySessions = await supaFetchSessionsToday()
+      renderLogs(todaySessions)
+    })
   } finally {
     state.startingShift = false
-    if (btn) { btn.disabled = false; btn.textContent = btn.dataset.prev || 'Iniciar turno'; delete btn.dataset.prev }
+    if (btn) { btn.disabled = false; btn.textContent = 'Iniciar turno' }
   }
 }
+
 
 
 async function stopShift() {
@@ -761,7 +783,7 @@ function bindEvents() {
     }
   })
 
-  
+
   // Schedules
   $('#btnSchedule').addEventListener('click', async () => {
     await refreshSession()
