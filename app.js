@@ -273,7 +273,7 @@ async function supaFetchSessionsToday() {
 }
 async function supaInsertSession(s) {
   const { data, error } = await supa.from('sessions').insert(s).select().single()
-  if (error) { alert('No se pudo iniciar la sesión: ' + error.message); return null }
+  if (error) { alert('Sesión ya iniciada'); return null }
   return data
 }
 async function supaUpdateSessionEnd(id, end, loc, addr) {
