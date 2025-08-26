@@ -230,6 +230,8 @@ async function supaFetchSchedules() {
   const todayStr = fmt(today)
   const tomorrowStr = fmt(tomorrow)
 
+  console.log('Fechas para agenda:', todayStr, tomorrowStr)
+
   const { data, error } = await supa
     .from('schedules')
     .select('*')
