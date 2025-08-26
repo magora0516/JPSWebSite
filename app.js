@@ -35,8 +35,10 @@ const state = {
   clients: [],
   schedules: [],
   activeSession: null,
-  currentWorker: []
+  currentWorker: [],
+  startingShift: false 
 }
+
 
 // --- Autenticación y roles ---
 async function isEmailAdmin(email) {
@@ -216,15 +218,7 @@ async function supaFetchClients() {
   if (error) { console.warn('supaFetchClients', error); return [] }
   return data || []
 }
-/* async function supaInsertClient(client) {
-  const { data, error } = await supa.from('clients').insert(client).select().single()
-  if (error) { alert('No se pudo guardar el cliente: ' + error.message); return null }
-  return data
-} */
-/* async function supaDeleteClient(id) {
-  const { error } = await supa.from('clients').delete().eq('id', id)
-  if (error) { alert('No se pudo eliminar el cliente: ' + error.message) }
-} */
+
 
 // --- API: Agendas ---
 async function supaFetchSchedules() {
@@ -467,9 +461,7 @@ function renderWorkerPanel() {
   $('#startAt').textContent = fmtDateTime(a.start_at)
   const durMs = (a.end_at ? new Date(a.end_at) : new Date()) - new Date(a.start_at)
   $('#locStart').textContent = a.loc_start_addr ? a.loc_start_addr : '—'
-  //$('#duration').textContent = fmtDuration(durMs)
-  //$('#locStart').textContent = a.loc_start_lat ? `${a.loc_start_lat.toFixed(5)}, ${a.loc_start_lng.toFixed(5)}` : '—'
-  //$('#locEnd').textContent = a.loc_end_lat ? `${a.loc_end_lat.toFixed(5)}, ${a.loc_end_lng.toFixed(5)}` : '—'
+  
   toggleShiftCards()
 }
 
@@ -595,8 +587,16 @@ async function withTimeout(promise, ms = 5000) {
 }
 
 
-
 async function startShift() {
+
+  if (state.startingShift) return                 // ← ignora toques repetidos
+  state.startingShift = true
+  const btn = $('#btnStart')
+  if (btn) { btn.disabled = true; btn.dataset.prev = btn.textContent; btn.textContent = 'Iniciando…' }
+
+  try {
+
+
   await refreshSession()
   const clientId = $('#workerClient').value
   if (!clientId) { alert('Selecciona un cliente'); return }
@@ -612,37 +612,69 @@ async function startShift() {
   }
   if (!worker) { alert('Trabajador inválido'); return }
 
-  ensureGeo(async loc => {
+  const loc = await new Promise(res => ensureGeo(res))
+
+  /* ensureGeo(async loc => {
     let locStartAddr = null
     if (loc) {
       try {
         const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
         locStartAddr = rev?.pretty || null
-      } catch (err) { /*ignora errores de geocodificación*/ }
-    }
-    const session = {
-      id: uid(),
-      worker: worker.name,
-      worker_id: worker.id,           // RLS depende de esto
-      client_id: clientId,
-      date: todayStr(),
-      start_at: new Date().toISOString(),
-      end_at: null,
-      loc_start_lat: loc?.lat ?? null,
-      loc_start_lng: loc?.lng ?? null,
-      loc_start_addr: locStartAddr,
-      loc_end_lat: null,
-      loc_end_lng: null,
-      loc_end_addr: null
-    }
+      } catch (err) { /*ignora errores de geocodificación }
+    }*/
+
+  const session = {
+    id: uid(),
+    worker: worker.name,
+    worker_id: worker.id,
+    client_id: clientId,
+    date: todayStr(),
+    start_at: new Date().toISOString(),
+    end_at: null,
+    loc_start_lat: loc?.lat ?? null,
+    loc_start_lng: loc?.lng ?? null,
+    loc_start_addr: null,          // se completa después
+    loc_end_lat: null,
+    loc_end_lng: null,
+    loc_end_addr: null
+  }
+
+  // intenta insertar
+
     const saved = await supaInsertSession(session)
 
-    const finalS = saved || session
-    state.activeSession = finalS
-    renderWorkerPanel(); startCountdownIfPlanned(); startTimeOut()
-    const todaySessions = await supaFetchSessionsToday();
-    renderLogs(todaySessions)
-  })
+    // si hubo colisión por duplicado, reuse la activa existente
+    if (!saved) {
+      const { data: existing } = await supa
+        .from('sessions')
+        .select('*')
+        .eq('worker_id', worker.id)
+        .eq('client_id', clientId)
+        .eq('date', todayStr())
+        .is('end_at', null)
+        .maybeSingle()
+      state.activeSession = existing || session
+    } else {
+      state.activeSession = saved
+    }
+    const last7 = await supaFetchSessionsLast7Days()
+    renderLogs(last7)
+
+    // completa dirección después, sin bloquear
+    if (loc) {
+      try {
+        const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
+        if (rev?.pretty) {
+          await supa.from('sessions').update({ loc_start_addr: rev.pretty }).eq('id', state.activeSession.id)
+          state.activeSession.loc_start_addr = rev.pretty
+          renderWorkerPanel()
+        }
+      } catch (_) { /* sin efecto si falla */ }
+    }
+  } finally {
+    state.startingShift = false
+    if (btn) { btn.disabled = false; btn.textContent = btn.dataset.prev || 'Iniciar turno'; delete btn.dataset.prev }
+  }
 }
 
 
@@ -718,33 +750,7 @@ function bindEvents() {
     }
   })
 
-  // Clients
-  /* $('#btnAddClient').addEventListener('click', async () => {
-    await refreshSession()
-    if (!state.isAdmin) { alert('Solo admin'); return }
-    const name = $('#clientName').value.trim()
-    const location = $('#clientLocation').value.trim()
-    if (!name) { alert('Escribe el nombre del cliente'); return }
-    const newClient = { id: uid(), name, location }
-    const saved = await supaInsertClient(newClient)
-    if (!saved) return
-    state.clients.push(saved)
-    $('#clientName').value = ''
-    $('#clientLocation').value = ''
-    renderClients()
-  })
-  $('#clientsTable').addEventListener('click', async e => {
-    if (e.target.tagName === 'BUTTON') {
-      await refreshSession()
-      if (!state.isAdmin) { alert('Solo admin'); return }
-      const id = e.target.getAttribute('data-id')
-      await supaDeleteClient(id)
-      state.clients = state.clients.filter(c => c.id !== id)
-      state.schedules = state.schedules.filter(s => s.client_id !== id)
-      renderClients(); renderSchedules(); renderLogs(await supaFetchSessionsToday())
-    }
-  }) */
-
+  
   // Schedules
   $('#btnSchedule').addEventListener('click', async () => {
     await refreshSession()
