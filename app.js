@@ -220,17 +220,25 @@ async function supaFetchClients() {
 }
 
 
+function ymdLocal(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 // --- API: Agendas ---
 async function supaFetchSchedules() {
-  const today = new Date()
-  const tomorrow = new Date()
+  const today = new Date(); today.setHours(0,0,0,0);
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+
+  const todayStr = ymdLocal(today);
+  const tomorrowStr = ymdLocal(tomorrow);
+
   tomorrow.setDate(today.getDate() + 1)
 
-  const fmt = d => d.toISOString().split('T')[0]
-  const todayStr = fmt(today)
-  const tomorrowStr = fmt(tomorrow)
+  console.log('Fechas para agenda (local):', todayStr, tomorrowStr);
 
-  console.log('Fechas para agenda:', todayStr, tomorrowStr)
 
   const { data, error } = await supa
     .from('schedules')
