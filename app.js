@@ -469,6 +469,7 @@ function renderWorkerPanel() {
 
 function clientsScheduledToday() {
   const today = todayStr()
+  console.log('Clientes con agenda para hoy:', today)
   const ids = new Set(state.schedules.filter(s => s.date === today).map(s => s.client_id))
   return state.clients.filter(c => ids.has(c.id))
 }
