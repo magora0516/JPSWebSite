@@ -463,6 +463,8 @@ function renderWorkerPanel() {
     $('#locStart').textContent = '—'
     $('#countdown').textContent = '00:00:00'
     toggleShiftCards()
+    $('#btnStart').disabled = !!a
+    $('#btnStop').disabled = !a
     return
   }
   $('#state').textContent = 'En servicio'
