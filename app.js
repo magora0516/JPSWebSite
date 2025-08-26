@@ -652,7 +652,7 @@ async function startShift() {
   if (state.startingShift) return
   state.startingShift = true
   const btn = $('#btnStart')
-  if (btn) { btn.disabled = true; btn.textContent = 'Iniciando…' }
+  if (btn) { btn.visibilityState = false; btn.textContent = 'Iniciando…' }
 
   try {
     await refreshSession()
@@ -705,7 +705,7 @@ async function startShift() {
     })
   } finally {
     state.startingShift = false
-    if (btn) { btn.disabled = false; btn.textContent = 'Iniciar turno' }
+    if (btn) { btn.visibilityState = true; btn.textContent = 'Iniciar turno' }
   }
 }
 
