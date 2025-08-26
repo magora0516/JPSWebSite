@@ -454,9 +454,7 @@ function renderLogs(sessions) {
 }
 function renderWorkerPanel() {
   const a = state.activeSession
-  // Actualizar botones y estado
-  $('#btnStart').disabled = !!a
-  $('#btnStop').disabled = !a
+ 
 
   if (!a) {
     $('#state').textContent = 'Libre'
@@ -473,6 +471,10 @@ function renderWorkerPanel() {
   $('#locStart').textContent = a.loc_start_addr ? a.loc_start_addr : '—'
 
   toggleShiftCards()
+
+  // Actualizar botones y estado
+  $('#btnStart').disabled = !!a
+  $('#btnStop').disabled = !a
 }
 
 function clientsScheduledToday() {
@@ -599,21 +601,24 @@ async function withTimeout(promise, ms = 5000) {
 
 
 
-/* async function startShift() {
+ async function startShift() {
+
+  $('#btnStop').disabled = true
+
   await refreshSession()
   const clientId = $('#workerClient').value
-  if (!clientId) { alert('Selecciona un cliente'); return }
+  if (!clientId) { alert('Selecciona un cliente'); $('#btnStop').disabled = false; return }
 
   let worker // decide el worker según rol
   if (state.isAdmin) {
     const workerId = $('#workerSel').value
-    if (!workerId) { alert('Selecciona un trabajador'); return }
+    if (!workerId) { alert('Selecciona un trabajador');  $('#btnStop').disabled = false; return }
     worker = state.workers.find(w => w.id === workerId)
   } else {
     if (!state.currentWorker) { await ensureCurrentWorker() }
     worker = state.currentWorker
   }
-  if (!worker) { alert('Trabajador inválido'); return }
+  if (!worker) { alert('Trabajador inválido');  $('#btnStop').disabled = false; return }
 
   ensureGeo(async loc => {
     let locStartAddr = null
@@ -621,7 +626,7 @@ async function withTimeout(promise, ms = 5000) {
       try {
         const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
         locStartAddr = rev?.pretty || null
-      } catch (err) { /*ignora errores de geocodificación }
+      } catch (err) { /*ignora errores de geocodificación*/ }
     }
     const session = {
       id: uid(),
@@ -646,68 +651,9 @@ async function withTimeout(promise, ms = 5000) {
     const todaySessions = await supaFetchSessionsToday();
     renderLogs(todaySessions)
   })
-} */
+} 
 
-async function startShift() {
-  if (state.startingShift) return
-  state.startingShift = true
-  const btn = $('#btnStart')
-  if (btn) { btn.visibilityState = false; btn.textContent = 'Iniciando…' }
 
-  try {
-    await refreshSession()
-    const clientId = $('#workerClient').value
-    if (!clientId) { alert('Selecciona un cliente'); return }
-
-    let worker
-    if (state.isAdmin) {
-      const workerId = $('#workerSel').value
-      if (!workerId) { alert('Selecciona un trabajador'); return }
-      worker = state.workers.find(w => w.id === workerId)
-    } else {
-      if (!state.currentWorker) { await ensureCurrentWorker() }
-      worker = state.currentWorker
-    }
-    if (!worker) { alert('Trabajador inválido'); return }
-
-    ensureGeo(async loc => {
-      let locStartAddr = null
-      if (loc) {
-        try {
-          const rev = await withTimeout(reverseGeocode(loc.lat, loc.lng), 5000)
-          locStartAddr = rev?.pretty || null
-        } catch (_) {}
-      }
-      const session = {
-        id: uid(),
-        worker: worker.name,
-        worker_id: worker.id,
-        client_id: clientId,
-        date: todayStr(),
-        start_at: new Date().toISOString(),
-        end_at: null,
-        loc_start_lat: loc?.lat ?? null,
-        loc_start_lng: loc?.lng ?? null,
-        loc_start_addr: locStartAddr,
-        loc_end_lat: null,
-        loc_end_lng: null,
-        loc_end_addr: null
-      }
-
-      const saved = await supaInsertSession(session)
-      const finalS = saved || session
-      state.activeSession = finalS
-      renderWorkerPanel()
-      startCountdownIfPlanned()
-      startTimeOut()
-      const todaySessions = await supaFetchSessionsToday()
-      renderLogs(todaySessions)
-    })
-  } finally {
-    state.startingShift = false
-    if (btn) { btn.visibilityState = true; btn.textContent = 'Iniciar turno' }
-  }
-}
 
 
 
