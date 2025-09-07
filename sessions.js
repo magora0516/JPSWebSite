@@ -166,159 +166,138 @@ function renderSW(){
   }
   
 
-// Eventos UI
-function bindEvents() {
+  function bindEvents() {
     $('#btnVolver')?.addEventListener('click', () => location.href = 'index.html#tab-admin')
-
-    // filtro
-    $('#formFilter').addEventListener('submit', async e => {
-        e.preventDefault()
-        const from = $('#fFrom').value || ymdLocal(new Date())
-        const to = $('#fTo').value || from
-        [state.workers, state.clients, state.schedules, state.rows] = await Promise.all([
-            fetchWorkers(), fetchClients(), fetchSchedulesRange(from, to), fetchSessionsRange(from, to)
-        ])
-        fillSelects()
-        renderTable()
+  
+    $('#formFilter')?.addEventListener('submit', async e => {
+      e.preventDefault()
+      const from = $('#fFrom')?.value || ymdLocal(new Date())
+      const to   = $('#fTo')?.value   || from
+      ;[state.workers, state.clients, state.schedules, state.rows] = await Promise.all([
+        fetchWorkers(), fetchClients(), fetchSchedulesRange(from, to), fetchSessionsRange(from, to)
+      ])
+      fillSelects()
+      renderTable()
     })
-
-    // abrir edición
-    $('#tblSessions').addEventListener('click', e => {
-        const id = e.target.closest('button[data-id]')?.getAttribute('data-id')
-        if (id) openEdit(id)
+  
+    $('#tblSessions')?.addEventListener('click', e => {
+      const id = e.target.closest('button[data-id]')?.getAttribute('data-id')
+      if (id) openEdit(id)
     })
-
-    // cambiar modo tiempo
-    document.querySelectorAll('input[name="modeTime"]').forEach(r => {
-        r.addEventListener('change', () => {
-            const m = document.querySelector('input[name="modeTime"]:checked').value
-            $('#timeByRange').style.display = m === 'range' ? 'grid' : 'none'
-            $('#timeByDuration').style.display = m === 'duration' ? 'grid' : 'none'
-        })
+  
+    document.querySelectorAll('input[name="modeTime"]')?.forEach(r => {
+      r.addEventListener('change', () => {
+        const m = document.querySelector('input[name="modeTime"]:checked')?.value || 'range'
+        $('#timeByRange').style.display    = m === 'range'    ? 'grid' : 'none'
+        $('#timeByDuration').style.display = m === 'duration' ? 'grid' : 'none'
+      })
     })
-
-    // geocodificación
-    $('#btnGeocodeStart').addEventListener('click', async () => {
-        const q = $('#e_loc_start_addr').value.trim(); if (!q) return
-        const g = await geocodeAddress(q); if (!g) { alert('No encontrado'); return }
-        $('#e_loc_start_addr').value = g.display
-        // guarda coords inmediatamente
-        await upsertSession({ id: $('#e_id').value, loc_start_lat: g.lat, loc_start_lng: g.lng, loc_start_addr: g.display })
+  
+    $('#btnGeocodeStart')?.addEventListener('click', async () => {
+      const q = $('#e_loc_start_addr')?.value?.trim(); if (!q) return
+      const g = await geocodeAddress(q); if (!g) { alert('No encontrado'); return }
+      $('#e_loc_start_addr').value = g.display
+      await upsertSession({ id: $('#e_id')?.value, loc_start_lat: g.lat, loc_start_lng: g.lng, loc_start_addr: g.display })
     })
-    $('#btnGeocodeEnd').addEventListener('click', async () => {
-        const q = $('#e_loc_end_addr').value.trim(); if (!q) return
-        const g = await geocodeAddress(q); if (!g) { alert('No encontrado'); return }
-        $('#e_loc_end_addr').value = g.display
-        await upsertSession({ id: $('#e_id').value, loc_end_lat: g.lat, loc_end_lng: g.lng, loc_end_addr: g.display })
+    $('#btnGeocodeEnd')?.addEventListener('click', async () => {
+      const q = $('#e_loc_end_addr')?.value?.trim(); if (!q) return
+      const g = await geocodeAddress(q); if (!g) { alert('No encontrado'); return }
+      $('#e_loc_end_addr').value = g.display
+      await upsertSession({ id: $('#e_id')?.value, loc_end_lat: g.lat, loc_end_lng: g.lng, loc_end_addr: g.display })
     })
-
-    // agregar trabajador parcial
-
+  
     document.getElementById('btnAddSW')?.addEventListener('click', async () => {
-        const session_id = document.getElementById('e_id').value
-        const worker_id = document.getElementById('sw_worker').value
-        const full = document.getElementById('sw_full').checked
-        if (!worker_id) { alert('Selecciona trabajador'); return }
-
-        let minutes = null, start_at = null, end_at = null
-        if (!full) {
-            const date = document.getElementById('e_date').value
-            const s = document.getElementById('sw_start').value
-            const e = document.getElementById('sw_end').value
-            if (s) start_at = toIso(date, s)
-            if (e) end_at = toIso(date, e)
-
-            const mField = document.getElementById('sw_minutes').value
-            if (mField) {
-                minutes = parseInt(mField, 10)
-                if (!Number.isFinite(minutes) || minutes < 0) { alert('Minutos inválidos'); return }
-            } else if (start_at && end_at) {
-                minutes = Math.max(0, Math.round((new Date(end_at) - new Date(start_at)) / 60000))
-            } else {
-                alert('Define minutos o rango inicio/fin para un tramo parcial')
-                return
-            }
-        }
-
-        const saved = await insertSessionWorker({
-            id: uid(),
-            session_id,
-            worker_id,
-            full_duration: full,
-            minutes,
-            start_at,
-            end_at
-        })
-        if (saved) { state.swRows.push(saved); renderSW() }
-    })
-
-
-    // quitar trabajador parcial
-    $('#tblSW').addEventListener('click', async e => {
-        const id = e.target.closest('button[data-swid]')?.getAttribute('data-swid')
-        if (!id) return
-        await deleteSessionWorker(id)
-        state.swRows = state.swRows.filter(x => x.id !== id)
-        renderSW()
-    })
-
-    // cancelar y eliminar
-    $('#btnCancel').addEventListener('click', () => $('#dlgEdit').close())
-    $('#btnDel').addEventListener('click', async () => {
-        const id = $('#e_id').value
-        if (!confirm('¿Eliminar la sesión?')) return
-        await deleteSession(id)
-        state.rows = state.rows.filter(x => x.id !== id)
-        renderTable()
-        $('#dlgEdit').close()
-    })
-
-    // guardar
-    $('#formEdit').addEventListener('submit', async e => {
-        e.preventDefault()
-        const id = $('#e_id').value
-        const date = $('#e_date').value
-        const client_id = $('#e_client').value
-        const mode = document.querySelector('input[name="modeTime"]:checked').value
-
-        let start_at = null, end_at = null
-        if (mode === 'range') {
-            const t1 = $('#e_start_time').value, t2 = $('#e_end_time').value
-            start_at = t1 ? toIso(date, t1) : null
-            end_at = t2 ? toIso(date, t2) : null
+      const session_id = document.getElementById('e_id')?.value
+      const worker_id  = document.getElementById('sw_worker')?.value
+      const full       = document.getElementById('sw_full')?.checked
+      if (!worker_id) { alert('Selecciona trabajador'); return }
+  
+      let minutes = null, start_at = null, end_at = null
+      if (!full) {
+        const date = document.getElementById('e_date')?.value
+        const s = document.getElementById('sw_start')?.value
+        const e = document.getElementById('sw_end')?.value
+        if (s) start_at = toIso(date, s)
+        if (e) end_at   = toIso(date, e)
+        const mField = document.getElementById('sw_minutes')?.value
+        if (mField) {
+          minutes = parseInt(mField, 10)
+          if (!Number.isFinite(minutes) || minutes < 0) { alert('Minutos inválidos'); return }
+        } else if (start_at && end_at) {
+          minutes = Math.max(0, Math.round((new Date(end_at) - new Date(start_at)) / 60000))
         } else {
-            const minutes = parseInt($('#e_minutes').value || '0', 10)
-            if (!Number.isNaN(minutes) && minutes > 0) {
-                const t1 = $('#e_start_time').value || '09:00'
-                start_at = toIso(date, t1)
-                end_at = new Date(new Date(start_at).getTime() + minutes * 60000).toISOString()
-            }
+          alert('Define minutos o rango inicio/fin para un tramo parcial')
+          return
         }
-
-        const patch = {
-            id, date, client_id,
-            start_at, end_at,
-            loc_start_addr: $('#e_loc_start_addr').value || null,
-            loc_end_addr: $('#e_loc_end_addr').value || null
-        }
-
-        const saved = await upsertSession(patch)
-        if (saved) {
-            const i = state.rows.findIndex(x => x.id === id)
-            if (i >= 0) state.rows[i] = saved
-            renderTable()
-            $('#dlgEdit').close()
-        }
+      }
+  
+      const saved = await insertSessionWorker({ id: uid(), session_id, worker_id, full_duration: full, minutes, start_at, end_at })
+      if (saved) { state.swRows.push(saved); renderSW() }
     })
-
+  
+    $('#tblSW')?.addEventListener('click', async e => {
+      const id = e.target.closest('button[data-swid]')?.getAttribute('data-swid')
+      if (!id) return
+      await deleteSessionWorker(id)
+      state.swRows = state.swRows.filter(x => x.id !== id)
+      renderSW()
+    })
+  
+    $('#btnCancel')?.addEventListener('click', () => $('#dlgEdit')?.close())
+    $('#btnDel')?.addEventListener('click', async () => {
+      const id = $('#e_id')?.value
+      if (!confirm('¿Eliminar la sesión?')) return
+      await deleteSession(id)
+      state.rows = state.rows.filter(x => x.id !== id)
+      renderTable()
+      $('#dlgEdit')?.close()
+    })
+  
+    $('#formEdit')?.addEventListener('submit', async e => {
+      e.preventDefault()
+      const id        = $('#e_id')?.value
+      const date      = $('#e_date')?.value
+      const client_id = $('#e_client')?.value
+      const mode      = document.querySelector('input[name="modeTime"]:checked')?.value || 'range'
+  
+      let start_at = null, end_at = null
+      if (mode === 'range') {
+        const t1 = $('#e_start_time')?.value, t2 = $('#e_end_time')?.value
+        start_at = t1 ? toIso(date, t1) : null
+        end_at   = t2 ? toIso(date, t2) : null
+      } else {
+        const minutes = parseInt($('#e_minutes')?.value || '0', 10)
+        if (!Number.isNaN(minutes) && minutes > 0) {
+          const t1 = $('#e_start_time')?.value || '09:00'
+          start_at = toIso(date, t1)
+          end_at   = new Date(new Date(start_at).getTime() + minutes * 60000).toISOString()
+        }
+      }
+  
+      const patch = {
+        id, date, client_id,
+        start_at, end_at,
+        loc_start_addr: $('#e_loc_start_addr')?.value || null,
+        loc_end_addr:   $('#e_loc_end_addr')?.value   || null
+      }
+  
+      const saved = await upsertSession(patch)
+      if (saved) {
+        const i = state.rows.findIndex(x => x.id === id)
+        if (i >= 0) state.rows[i] = saved
+        renderTable()
+        $('#dlgEdit')?.close()
+      }
+    })
+  
     document.getElementById('sw_full')?.addEventListener('change', () => {
-        const full = document.getElementById('sw_full').checked
-        document.getElementById('sw_minutes').disabled = full
-        document.getElementById('sw_start').disabled = full
-        document.getElementById('sw_end').disabled = full
+      const full = document.getElementById('sw_full')?.checked
+      document.getElementById('sw_minutes').disabled = full
+      document.getElementById('sw_start').disabled   = full
+      document.getElementById('sw_end').disabled     = full
     })
-
-}
+  }
+  
 
 async function init() {
     await refreshSession()
