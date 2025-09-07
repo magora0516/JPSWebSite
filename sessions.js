@@ -32,7 +32,7 @@ async function isEmailAdmin(email) {
 }
 async function refreshSession() {
     const { data: { session } } = await supa.auth.getSession()
-    console.log('Session:', session)    
+    console.log('Session:', session)
     state.session = session
     const email = session?.user?.email || ''
     state.isAdmin = await isEmailAdmin(email)
@@ -114,9 +114,16 @@ function openEditDialog(row) {
     $('#e_worker').value = row.worker_id || ''
     $('#e_client').value = row.client_id || ''
     // normaliza datetime-local (YYYY-MM-DDTHH:MM)
-    const toLocal = (iso) => !iso ? '' : new Date(iso).toISOString().slice(0, 16)
-    $('#e_start').value = toLocal(row.start_at)
-    $('#e_end').value = toLocal(row.end_at)
+    const toLocalInputValue = (iso) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); // “des-UTC” para el input local
+        return d.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+    };
+    $('#e_start').value = toLocalInputValue(row.start_at);
+    $('#e_end').value = toLocalInputValue(row.end_at);
+    //$('#e_start').value = toLocal(row.start_at)
+    //$('#e_end').value = toLocal(row.end_at)
     $('#e_start_addr').value = row.loc_start_addr ?? ''
     $('#e_end_addr').value = row.loc_end_addr ?? ''
     $('#dlgEdit').showModal()
