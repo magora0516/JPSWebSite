@@ -1,192 +1,83 @@
-<!doctype html>
+<!-- sessions.html -->
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sesiones | JP’s Magic Cleaning</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="sessions.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sesiones</title>
+  <link rel="stylesheet" href="sessions.css" />
 </head>
 <body>
   <header class="topbar">
-    <a href="index.html" class="brand">
-      <img src="logo_header.png" alt="JP’s Magic Cleaning" height="28">
-    </a>
-    <nav class="nav">
-      <a href="calendar.html">Calendario</a>
-      <a href="clients.html">Clientes</a>
-      <strong>Sesiones</strong>
-    </nav>
+    <div class="left">
+      <button id="btnVolver" class="btn-link">Volver</button>
+    </div>
+    <div class="center">
+      <h1>Sesiones</h1>
+    </div>
+    <div class="right"></div>
   </header>
 
   <main class="container">
-    <h1>Sesiones</h1>
-
-    <section class="filters">
-      <label>
-        Desde
-        <input type="date" id="fFrom">
-      </label>
-      <label>
-        Hasta
-        <input type="date" id="fTo">
-      </label>
-      <label>
-        Trabajador
-        <select id="fWorker"></select>
-      </label>
-      <label>
-        Cliente
-        <select id="fClient"></select>
-      </label>
-      <button id="btnFilter">Filtrar</button>
-      <button id="btnNew">Nueva sesión</button>
+    <section class="card">
+      <h3>Filtros</h3>
+      <form id="formFilter" class="grid">
+        <label>Desde<input id="fFrom" type="date" /></label>
+        <label>Hasta<input id="fTo" type="date" /></label>
+        <label>Trabajador
+          <select id="fWorker"></select>
+        </label>
+        <label>Cliente
+          <select id="fClient"></select>
+        </label>
+        <div class="actions">
+          <button class="primary" type="submit">Buscar</button>
+          <button id="btnExport" type="button">Exportar CSV</button>
+        </div>
+      </form>
     </section>
 
-    <section id="flagScheduled" class="hint" hidden>
-      Coincidencias con agenda encontradas para este rango.
-    </section>
-
-    <section class="table-wrap">
-      <table id="tblSessions">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Trabajadores</th>
-            <th>Inicio</th>
-            <th>Fin</th>
-            <th>Duración</th>
-            <th>Programada</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div class="pager">
-        <button id="btnPrev" disabled>Anterior</button>
-        <span id="pageInfo">1</span>
-        <button id="btnNext" disabled>Siguiente</button>
+    <section class="card">
+      <h3>Listado</h3>
+      <div class="table-wrap">
+        <table class="list" id="tblSessions">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Trabajador</th>
+              <th>Cliente</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Duración</th>
+              <th>Inicio (addr)</th>
+              <th>Fin (addr)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
   </main>
 
   <dialog id="dlgEdit">
-    <form id="formEdit" method="dialog">
-      <h2 id="dlgTitle">Nueva sesión</h2>
-
-      <div class="grid2">
-        <label>
-          Fecha
-          <input type="date" name="date" required>
-        </label>
-        <label>
-          Cliente
-          <select name="client_id" required></select>
-        </label>
-      </div>
-
-      <fieldset>
-        <legend>Tiempo del servicio</legend>
-        <label class="row">
-          <input type="radio" name="time_mode" value="range" checked>
-          Inicio y fin
-        </label>
-        <div class="grid3" data-mode="range">
-          <label>
-            Inicio
-            <input type="time" name="start_at">
-          </label>
-          <label>
-            Fin
-            <input type="time" name="end_at">
-          </label>
-          <label>
-            Duración calculada
-            <input type="text" name="duration_calc" readonly>
-          </label>
-        </div>
-
-        <label class="row">
-          <input type="radio" name="time_mode" value="total">
-          Duración total
-        </label>
-        <div class="grid2" data-mode="total" hidden>
-          <label>
-            Minutos totales
-            <input type="number" min="1" step="1" name="minutes_total">
-          </label>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Trabajadores</legend>
-        <div id="workersList"></div>
-        <button type="button" id="btnAddWorker">Agregar trabajador</button>
-        <p class="note">
-          Por defecto todos trabajan tiempo completo. Para parciales, desmarca “tiempo completo” y define minutos o rango.
-        </p>
-        <p id="sumWarning" class="warn" hidden>
-          La suma de parciales excede la duración total.
-        </p>
-      </fieldset>
-
-      <fieldset>
-        <legend>Ubicación</legend>
-        <div class="grid2">
-          <label>
-            Inicio dirección
-            <input type="text" name="loc_start_addr" placeholder="Calle, ciudad">
-          </label>
-          <label>
-            Fin dirección
-            <input type="text" name="loc_end_addr" placeholder="Calle, ciudad">
-          </label>
-        </div>
-        <div class="row">
-          <button type="button" id="btnGeocode">Geocodificar</button>
-          <span id="geoStatus" class="muted"></span>
-        </div>
-      </fieldset>
-
-      <menu class="actions">
-        <button value="cancel">Cancelar</button>
-        <button id="btnDelete" class="danger" type="button" hidden>Eliminar</button>
-        <button id="btnSave" class="primary" type="submit">Guardar</button>
+    <form id="formEdit" method="dialog" class="grid">
+      <h3>Editar sesión</h3>
+      <input type="hidden" id="e_id">
+      <label>Fecha<input id="e_date" type="date" required></label>
+      <label>Trabajador<select id="e_worker"></select></label>
+      <label>Cliente<select id="e_client"></select></label>
+      <label>Inicio<input id="e_start" type="datetime-local"></label>
+      <label>Fin<input id="e_end" type="datetime-local"></label>
+      <label>Loc. inicio (addr)<input id="e_start_addr"></label>
+      <label>Loc. fin (addr)<input id="e_end_addr"></label>
+      <menu>
+        <button type="button" id="btnDel" class="danger">Eliminar</button>
+        <button type="button" id="btnCancel">Cancelar</button>
+        <button type="submit" class="primary">Guardar</button>
       </menu>
-
-      <input type="hidden" name="id">
     </form>
   </dialog>
 
-  <template id="tplWorkerRow">
-    <div class="worker-row">
-      <select name="worker_id"></select>
-      <label class="chk">
-        <input type="checkbox" name="full_duration" checked>
-        Tiempo completo
-      </label>
-      <div class="partial" hidden>
-        <label>
-          Minutos
-          <input type="number" min="1" step="1" name="minutes">
-        </label>
-        <label>
-          Inicio
-          <input type="time" name="w_start_at">
-        </label>
-        <label>
-          Fin
-          <input type="time" name="w_end_at">
-        </label>
-      </div>
-      <button type="button" class="remove">Quitar</button>
-    </div>
-  </template>
-
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="app.js"></script>
-  <script src="sessions.js"></script>
-</body>
-</html>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <scri

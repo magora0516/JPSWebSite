@@ -1,456 +1,234 @@
 // sessions.js
-// Requiere app.js con supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-// y helpers de UI si ya existen.
+// Supabase (igual que en tu app)
+const SUPABASE_URL = 'https://zsavhkkhdhlhwmtxqyon.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXZoa2toZGhsaHdtdHhxeW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3MDU5ODUsImV4cCI6MjA3MDI4MTk4NX0.mecvMpBJDNeebA_bygW3zP_Qwdbp0An-9B8z1WYh59w'
+const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-(() => {
-  const supa = window.supa || createSupabase();
-  const qs = s => document.querySelector(s);
-  const qsa = s => [...document.querySelectorAll(s)];
-  const fmtHMS = mins => {
-    const m = Math.max(0, Math.round(mins));
-    const h = Math.floor(m / 60);
-    const r = m % 60;
-    return `${String(h).padStart(2,'0')}:${String(r).padStart(2,'0')}:00`;
-  };
-  const parseTimeToMinutes = (t) => {
-    if (!t) return null;
-    const [hh, mm] = t.split(':').map(Number);
-    return hh * 60 + mm;
-    };
-  const minutesDiffFromTimes = (start, end) => {
-    const ms = parseTimeToMinutes(start);
-    const me = parseTimeToMinutes(end);
-    if (ms == null || me == null) return null;
-    let d = me - ms;
-    if (d < 0) d += 24 * 60;
-    return d;
-  };
+const $ = s => document.querySelector(s)
+const pad = n => String(n).padStart(2,'0')
+const fmtDateTime = d => new Date(d).toLocaleString()
+const fmtDuration = (ms) => {
+  if (!ms || ms < 0) return '—'
+  const h = Math.floor(ms / 3600000)
+  const m = Math.floor((ms % 3600000) / 60000)
+  const s = Math.floor((ms % 60000) / 1000)
+  return `${pad(h)}:${pad(m)}:${pad(s)}`
+}
+const ymdLocal = d => {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0')
+  return `${y}-${m}-${day}`
+}
+function todayStr(){
+  const d=new Date(); d.setHours(0,0,0,0); return ymdLocal(d)
+}
 
-  // Estado
-  const state = {
-    page: 1,
-    pageSize: 20,
-    workers: [],
-    clients: [],
-    schedulesByKey: new Set(), // date|client_id
-    sessions: [],
-    editing: null,
-    filters: {}
-  };
+const state = { isAdmin:false, session:null, clients:[], workers:[], rows:[] }
 
-  // Inicio
-  document.addEventListener('DOMContentLoaded', init);
+async function isEmailAdmin(email){
+  if(!email) return false
+  const { data, error } = await supa.from('admins').select('email').eq('email', email.toLowerCase()).maybeSingle()
+  if(error){ console.warn(error); return false }
+  return !!data
+}
+async function refreshSession(){
+  const { data:{session} } = await supa.auth.getSession()
+  state.session = session
+  const email = session?.user?.email || ''
+  state.isAdmin = await isEmailAdmin(email)
+  if(!session) { window.location.href = 'index.html#tab-worker'; return }
+  if(!state.isAdmin) { window.location.href = 'index.html#tab-worker'; return }
+}
 
-  async function init() {
-    setDefaultDates();
-    await Promise.all([loadWorkers(), loadClients()]);
-    bindFilters();
-    await fetchScheduledKeys();
-    await loadSessions();
+async function fetchWorkers(){
+  const { data, error } = await supa.from('workers').select('id,name,active').eq('active', true).order('name')
+  if(error) { console.warn('workers', error); return [] }
+  return data || []
+}
+async function fetchClients(){
+  const { data, error } = await supa.from('clients').select('id,name').order('name')
+  if(error) { console.warn('clients', error); return [] }
+  return data || []
+}
 
-    qs('#btnNew').addEventListener('click', () => openEditor());
-    qs('#btnPrev').addEventListener('click', prevPage);
-    qs('#btnNext').addEventListener('click', nextPage);
-  }
+async function fetchSessionsRange(fromYmd, toYmd, workerId=null, clientId=null){
+  let q = supa.from('sessions').select('*')
+    .gte('date', fromYmd).lte('date', toYmd)
+    .order('date', { ascending:true })
+    .order('start_at', { ascending:true })
+  if(workerId) q = q.eq('worker_id', workerId)
+  if(clientId) q = q.eq('client_id', clientId)
+  const { data, error } = await q
+  if(error){ console.warn('sessions', error); return [] }
+  return data || []
+}
 
-  function setDefaultDates() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    qs('#fFrom').value = `${yyyy}-${mm}-${dd}`;
-    qs('#fTo').value = `${yyyy}-${mm}-${dd}`;
-  }
+async function updateSession(id, patch){
+  const { data, error } = await supa.from('sessions').update(patch).eq('id', id).select().maybeSingle()
+  if(error){ alert('No se pudo actualizar: ' + error.message); return null }
+  return data
+}
+async function deleteSession(id){
+  const { error } = await supa.from('sessions').delete().eq('id', id)
+  if(error){ alert('No se pudo eliminar: ' + error.message) }
+}
 
-  function bindFilters() {
-    qs('#btnFilter').addEventListener('click', async () => {
-      state.page = 1;
-      await fetchScheduledKeys();
-      await loadSessions();
-    });
-  }
+function fillSelects(){
+  $('#fWorker').innerHTML = ['<option value="">—</option>']
+    .concat(state.workers.map(w=>`<option value="${w.id}">${w.name}</option>`)).join('')
+  $('#fClient').innerHTML = ['<option value="">—</option>']
+    .concat(state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`)).join('')
 
-  async function loadWorkers() {
-    const { data, error } = await supa.from('workers').select('id,name,active').order('name');
-    if (error) return toast(error.message);
-    state.workers = data || [];
-    fillSelect(qs('#fWorker'), [{ id: '', name: 'Todos' }, ...state.workers]);
-  }
+  // Diálogo de edición
+  $('#e_worker').innerHTML = ['<option value="">—</option>']
+    .concat(state.workers.map(w=>`<option value="${w.id}">${w.name}</option>`)).join('')
+  $('#e_client').innerHTML = ['<option value="">—</option>']
+    .concat(state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`)).join('')
+}
 
-  async function loadClients() {
-    const { data, error } = await supa.from('clients').select('id,name').order('name');
-    if (error) return toast(error.message);
-    state.clients = data || [];
-    fillSelect(qs('#fClient'), [{ id: '', name: 'Todos' }, ...state.clients]);
-  }
+function renderTable(){
+  const tbody = $('#tblSessions tbody'); tbody.innerHTML = ''
+  state.rows.forEach(r=>{
+    const workerName = r.worker || (state.workers.find(w=>w.id===r.worker_id)?.name) || '—'
+    const clientName = (state.clients.find(c=>c.id===r.client_id)?.name) || '—'
+    const dur = r.end_at ? fmtDuration(new Date(r.end_at)-new Date(r.start_at)) : 'En curso'
+    const tr = document.createElement('tr')
+    tr.innerHTML = `
+      <td>${r.date ?? ''}</td>
+      <td>${workerName}</td>
+      <td>${clientName}</td>
+      <td>${r.start_at ? fmtDateTime(r.start_at) : '—'}</td>
+      <td>${r.end_at ? fmtDateTime(r.end_at) : '—'}</td>
+      <td>${dur}</td>
+      <td>${r.loc_start_addr ?? ''}</td>
+      <td>${r.loc_end_addr ?? ''}</td>
+      <td><button class="btn-link" data-id="${r.id}">Editar</button></td>
+    `
+    tbody.appendChild(tr)
+  })
+}
 
-  function fillSelect(sel, items) {
-    sel.innerHTML = items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
-  }
+function openEditDialog(row){
+  $('#e_id').value = row.id
+  $('#e_date').value = row.date ?? todayStr()
+  $('#e_worker').value = row.worker_id || ''
+  $('#e_client').value = row.client_id || ''
+  // normaliza datetime-local (YYYY-MM-DDTHH:MM)
+  const toLocal = (iso) => !iso ? '' : new Date(iso).toISOString().slice(0,16)
+  $('#e_start').value = toLocal(row.start_at)
+  $('#e_end').value   = toLocal(row.end_at)
+  $('#e_start_addr').value = row.loc_start_addr ?? ''
+  $('#e_end_addr').value   = row.loc_end_addr ?? ''
+  $('#dlgEdit').showModal()
+}
 
-  async function fetchScheduledKeys() {
-    const from = qs('#fFrom').value;
-    const to = qs('#fTo').value;
-    const { data, error } = await supa
-      .from('schedules')
-      .select('date, client_id')
-      .gte('date', from)
-      .lte('date', to);
-    if (error) return toast(error.message);
-    const set = new Set();
-    (data || []).forEach(r => set.add(`${r.date}|${r.client_id}`));
-    state.schedulesByKey = set;
-    qs('#flagScheduled').hidden = set.size === 0;
-  }
+function csvEscape(v){
+  if(v==null) return ''
+  const s = String(v)
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s
+}
+function downloadCsv(filename, csv){
+  const blob = new Blob([`\uFEFF${csv}`], { type:'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a'); a.href=url; a.download=filename
+  document.body.appendChild(a); a.click()
+  document.body.removeChild(a); URL.revokeObjectURL(url)
+}
+function buildCsv(rows){
+  const headers = ['date','worker_name','client_name','start_at','end_at','duration_hms','loc_start_addr','loc_end_addr']
+  const lines = [headers.join(',')]
+  rows.forEach(r=>{
+    const workerName = r.worker || (state.workers.find(w=>w.id===r.worker_id)?.name) || ''
+    const clientName = (state.clients.find(c=>c.id===r.client_id)?.name) || ''
+    const dur = r.end_at ? fmtDuration(new Date(r.end_at)-new Date(r.start_at)) : ''
+    lines.push([
+      r.date||'', workerName, clientName,
+      r.start_at||'', r.end_at||'', dur,
+      r.loc_start_addr||'', r.loc_end_addr||''
+    ].map(csvEscape).join(','))
+  })
+  return lines.join('\n')
+}
 
-  async function loadSessions() {
-    const from = qs('#fFrom').value;
-    const to = qs('#fTo').value;
-    const workerId = qs('#fWorker').value;
-    const clientId = qs('#fClient').value;
+function bindEvents(){
+  // volver al index (como en clientes/calendario)
+  $('#btnVolver')?.addEventListener('click', () => window.location.href = 'index.html#tab-admin')
 
-    let q = supa
-      .from('sessions')
-      .select('id,date,client_id,start_at,end_at,minutes,session_workers(worker_id,full_duration,minutes,start_at,end_at), clients(name)')
-      .gte('date', from)
-      .lte('date', to)
-      .order('date', { ascending: false })
-      .range((state.page - 1) * state.pageSize, state.page * state.pageSize - 1);
+  // buscar
+  $('#formFilter').addEventListener('submit', async (e)=>{
+    e.preventDefault()
+    await refreshSession()
+    if(!state.isAdmin){ alert('Solo admin'); return }
+    const from = $('#fFrom').value || todayStr()
+    const to   = $('#fTo').value   || from
+    const workerId = $('#fWorker').value || null
+    const clientId = $('#fClient').value || null
+    state.rows = await fetchSessionsRange(from, to, workerId, clientId)
+    renderTable()
+  })
 
-    if (workerId) q = q.contains('session_workers', [{ worker_id: Number(workerId) }]);
-    if (clientId) q = q.eq('client_id', clientId);
+  // exportar
+  $('#btnExport').addEventListener('click', ()=>{
+    if(!state.rows?.length){ alert('No hay datos para exportar'); return }
+    downloadCsv('sessions.csv', buildCsv(state.rows))
+  })
 
-    const { data, error, count } = await q;
-    if (error) return toast(error.message);
+  // abrir edición
+  $('#tblSessions').addEventListener('click', (e)=>{
+    const id = e.target.closest('button[data-id]')?.getAttribute('data-id')
+    if(!id) return
+    const row = state.rows.find(r=>r.id===id)
+    if(row) openEditDialog(row)
+  })
 
-    state.sessions = data || [];
-    renderTable();
-    updatePager((count ?? state.sessions.length) > state.page * state.pageSize);
-  }
+  // diálogo
+  $('#btnCancel').addEventListener('click', ()=> $('#dlgEdit').close())
+  $('#btnDel').addEventListener('click', async ()=>{
+    if(!confirm('¿Eliminar esta sesión?')) return
+    const id = $('#e_id').value
+    await deleteSession(id)
+    state.rows = state.rows.filter(r=>r.id!==id)
+    renderTable()
+    $('#dlgEdit').close()
+  })
 
-  function renderTable() {
-    const tbody = qs('#tblSessions tbody');
-    tbody.innerHTML = state.sessions.map(row => {
-      const sw = row.session_workers || [];
-      const workers = sw.map(w => {
-        const ww = state.workers.find(x => x.id === w.worker_id);
-        const nm = ww ? ww.name : `ID ${w.worker_id}`;
-        const part = w.full_duration ? 'completo' : `${w.minutes ?? minutesDiffFromTimes(w.start_at, w.end_at) ?? 0} min`;
-        return `${nm} (${part})`;
-      }).join(', ');
-      const totalMin = row.minutes ?? minutesDiffFromTimes(row.start_at, row.end_at) ?? 0;
-      const key = `${row.date}|${row.client_id}`;
-      const scheduled = state.schedulesByKey.has(key) ? 'Sí' : 'No';
+  // guardar edición
+  $('#formEdit').addEventListener('submit', async (e)=>{
+    e.preventDefault()
+    await refreshSession()
+    if(!state.isAdmin){ alert('Solo admin'); return }
 
-      return `
-        <tr>
-          <td>${row.date}</td>
-          <td>${row.clients?.name ?? ''}</td>
-          <td>${workers}</td>
-          <td>${row.start_at ?? ''}</td>
-          <td>${row.end_at ?? ''}</td>
-          <td>${fmtHMS(totalMin)}</td>
-          <td>${scheduled}</td>
-          <td>
-            <button class="link" data-act="edit" data-id="${row.id}">Editar</button>
-          </td>
-        </tr>`;
-    }).join('');
-
-    tbody.querySelectorAll('button[data-act="edit"]').forEach(b => {
-      b.addEventListener('click', () => openEditor(b.dataset.id));
-    });
-  }
-
-  function updatePager(hasNext) {
-    qs('#pageInfo').textContent = String(state.page);
-    qs('#btnPrev').disabled = state.page <= 1;
-    qs('#btnNext').disabled = !hasNext;
-  }
-  async function nextPage() { state.page += 1; await loadSessions(); }
-  async function prevPage() { state.page = Math.max(1, state.page - 1); await loadSessions(); }
-
-  async function openEditor(id) {
-    const dlg = qs('#dlgEdit');
-    const form = qs('#formEdit');
-    form.reset();
-    qs('#workersList').innerHTML = '';
-    qs('#sumWarning').hidden = true;
-    qs('#btnDelete').hidden = !id;
-
-    await seedSelectsInForm(form);
-
-    if (id) {
-      const { data, error } = await supa
-        .from('sessions')
-        .select('*, session_workers(*)')
-        .eq('id', id).single();
-      if (error) return toast(error.message);
-      state.editing = data;
-      fillForm(form, data);
-      data.session_workers?.forEach(w => addWorkerRow(w));
-      qs('#dlgTitle').textContent = 'Editar sesión';
-    } else {
-      state.editing = null;
-      qs('#dlgTitle').textContent = 'Nueva sesión';
-      addWorkerRow();
+    const id = $('#e_id').value
+    const patch = {
+      date: $('#e_date').value || null,
+      worker_id: $('#e_worker').value || null,
+      client_id: $('#e_client').value || null,
+      start_at: $('#e_start').value ? new Date($('#e_start').value).toISOString() : null,
+      end_at:   $('#e_end').value   ? new Date($('#e_end').value).toISOString()   : null,
+      loc_start_addr: $('#e_start_addr').value.trim() || null,
+      loc_end_addr:   $('#e_end_addr').value.trim()   || null
     }
-
-    bindTimeMode(form);
-    bindFormEvents(form);
-    dlg.showModal();
-  }
-
-  async function seedSelectsInForm(form) {
-    const csel = form.elements.namedItem('client_id');
-    csel.innerHTML = state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  }
-
-  function fillForm(form, row) {
-    form.elements.namedItem('id').value = row.id;
-    form.elements.namedItem('date').value = row.date;
-    form.elements.namedItem('client_id').value = row.client_id;
-
-    if (row.minutes != null && (!row.start_at || !row.end_at)) {
-      form.elements.namedItem('time_mode').value = 'total';
-      toggleTimeMode(form, 'total');
-      form.elements.namedItem('minutes_total').value = row.minutes;
-    } else {
-      form.elements.namedItem('time_mode').value = 'range';
-      toggleTimeMode(form, 'range');
-      form.elements.namedItem('start_at').value = row.start_at || '';
-      form.elements.namedItem('end_at').value = row.end_at || '';
-      form.elements.namedItem('duration_calc').value = fmtHMS(minutesDiffFromTimes(row.start_at, row.end_at) ?? 0);
+    const saved = await updateSession(id, patch)
+    if(saved){
+      const idx = state.rows.findIndex(r=>r.id===id)
+      if(idx>=0) state.rows[idx] = saved
+      renderTable()
+      $('#dlgEdit').close()
     }
+  })
+}
 
-    form.elements.namedItem('loc_start_addr').value = row.loc_start_addr || '';
-    form.elements.namedItem('loc_end_addr').value = row.loc_end_addr || '';
-  }
+async function init(){
+  await refreshSession()
+  const [workers, clients] = await Promise.all([ fetchWorkers(), fetchClients() ])
+  state.workers = workers; state.clients = clients
+  fillSelects()
 
-  function bindTimeMode(form) {
-    qsa('input[name="time_mode"]').forEach(r => {
-      r.addEventListener('change', () => toggleTimeMode(form, r.value));
-    });
-    form.elements.namedItem('start_at').addEventListener('input', updateDurationCalc);
-    form.elements.namedItem('end_at').addEventListener('input', updateDurationCalc);
-  }
+  // precarga: hoy
+  $('#fFrom').value = todayStr()
+  $('#fTo').value   = todayStr()
+  state.rows = await fetchSessionsRange(todayStr(), todayStr(), null, null)
+  renderTable()
+}
 
-  function toggleTimeMode(form, mode) {
-    qsa('[data-mode="range"]').forEach(d => d.hidden = mode !== 'range');
-    qsa('[data-mode="total"]').forEach(d => d.hidden = mode !== 'total');
-  }
-  function updateDurationCalc() {
-    const form = qs('#formEdit');
-    const s = form.elements.namedItem('start_at').value;
-    const e = form.elements.namedItem('end_at').value;
-    form.elements.namedItem('duration_calc').value = fmtHMS(minutesDiffFromTimes(s, e) ?? 0);
-    validateWorkersSum();
-  }
-
-  function addWorkerRow(pref) {
-    const wrap = qs('#workersList');
-    const tpl = qs('#tplWorkerRow').content.cloneNode(true);
-    const row = tpl.querySelector('.worker-row');
-
-    const sel = row.querySelector('select[name="worker_id"]');
-    sel.innerHTML = state.workers.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
-    if (pref?.worker_id) sel.value = pref.worker_id;
-
-    const chk = row.querySelector('input[name="full_duration"]');
-    const part = row.querySelector('.partial');
-    const minutes = row.querySelector('input[name="minutes"]');
-    const ws = row.querySelector('input[name="w_start_at"]');
-    const we = row.querySelector('input[name="w_end_at"]');
-
-    chk.addEventListener('change', () => {
-      part.hidden = chk.checked;
-      validateWorkersSum();
-    });
-
-    [minutes, ws, we].forEach(el => el.addEventListener('input', validateWorkersSum));
-    row.querySelector('.remove').addEventListener('click', () => {
-      row.remove();
-      validateWorkersSum();
-    });
-
-    if (pref) {
-      chk.checked = !!pref.full_duration;
-      part.hidden = chk.checked;
-      minutes.value = pref.minutes ?? '';
-      ws.value = pref.start_at ?? '';
-      we.value = pref.end_at ?? '';
-    }
-
-    wrap.appendChild(tpl);
-  }
-
-  function bindFormEvents(form) {
-    qs('#btnAddWorker').onclick = () => addWorkerRow();
-    qs('#btnGeocode').onclick = geocodeAddresses;
-    form.onsubmit = onSave;
-    qs('#btnDelete').onclick = onDelete;
-  }
-
-  function totalServiceMinutes() {
-    const form = qs('#formEdit');
-    const mode = form.elements.namedItem('time_mode').value;
-    if (mode === 'total') return Number(form.elements.namedItem('minutes_total').value || 0);
-    const s = form.elements.namedItem('start_at').value;
-    const e = form.elements.namedItem('end_at').value;
-    return minutesDiffFromTimes(s, e) ?? 0;
-  }
-
-  function validateWorkersSum() {
-    const form = qs('#formEdit');
-    const total = totalServiceMinutes();
-    const rows = qsa('#workersList .worker-row');
-    let sum = 0;
-    rows.forEach(r => {
-      const full = r.querySelector('input[name="full_duration"]').checked;
-      if (!full) {
-        const m = Number(r.querySelector('input[name="minutes"]').value || 0)
-          || minutesDiffFromTimes(
-              r.querySelector('input[name="w_start_at"]').value,
-              r.querySelector('input[name="w_end_at"]').value
-            ) || 0;
-        sum += m;
-      }
-    });
-    const warn = qs('#sumWarning');
-    warn.hidden = sum <= total || total === 0;
-    return warn.hidden;
-  }
-
-  async function onSave(ev) {
-    ev.preventDefault();
-    const form = ev.target;
-    if (!validateWorkersSum()) return toast('La suma de parciales excede la duración total');
-
-    const payload = formToSessionPayload(form);
-    let sessionId = payload.id || undefined;
-
-    if (sessionId) {
-      const { error } = await supa.from('sessions').update(payload.update).eq('id', sessionId);
-      if (error) return toast(error.message);
-      await saveWorkers(sessionId, payload.workers);
-    } else {
-      const { data, error } = await supa.from('sessions').insert(payload.insert).select('id').single();
-      if (error) return toast(error.message);
-      sessionId = data.id;
-      await saveWorkers(sessionId, payload.workers);
-    }
-
-    qs('#dlgEdit').close();
-    await loadSessions();
-    toast('Guardado');
-  }
-
-  function formToSessionPayload(form) {
-    const id = form.elements.namedItem('id').value || null;
-    const date = form.elements.namedItem('date').value;
-    const client_id = Number(form.elements.namedItem('client_id').value);
-    const mode = form.elements.namedItem('time_mode').value;
-
-    let start_at = null, end_at = null, minutes = null;
-    if (mode === 'total') {
-      minutes = Number(form.elements.namedItem('minutes_total').value || 0);
-    } else {
-      start_at = form.elements.namedItem('start_at').value || null;
-      end_at = form.elements.namedItem('end_at').value || null;
-      minutes = minutesDiffFromTimes(start_at, end_at);
-    }
-
-    const loc_start_addr = form.elements.namedItem('loc_start_addr').value || null;
-    const loc_end_addr = form.elements.namedItem('loc_end_addr').value || null;
-
-    const workers = qsa('#workersList .worker-row').map(r => {
-      const worker_id = Number(r.querySelector('select[name="worker_id"]').value);
-      const full_duration = r.querySelector('input[name="full_duration"]').checked;
-      const wm = Number(r.querySelector('input[name="minutes"]').value || 0) || null;
-      const w_start_at = r.querySelector('input[name="w_start_at"]').value || null;
-      const w_end_at = r.querySelector('input[name="w_end_at"]').value || null;
-      return { worker_id, full_duration, minutes: wm, start_at: w_start_at, end_at: w_end_at };
-    });
-
-    return {
-      id,
-      insert: { date, client_id, start_at, end_at, minutes, loc_start_addr, loc_end_addr },
-      update: { date, client_id, start_at, end_at, minutes, loc_start_addr, loc_end_addr },
-      workers
-    };
-  }
-
-  async function saveWorkers(sessionId, workers) {
-    // Estrategia simple: borrar y reinsertar
-    const { error: delErr } = await supa.from('session_workers').delete().eq('session_id', sessionId);
-    if (delErr) throw delErr;
-
-    const rows = workers.map(w => ({ ...w, session_id: sessionId }));
-    if (rows.length) {
-      const { error } = await supa.from('session_workers').insert(rows);
-      if (error) throw error;
-    }
-  }
-
-  async function onDelete() {
-    if (!state.editing?.id) return;
-    if (!confirm('¿Eliminar esta sesión?')) return;
-    const id = state.editing.id;
-    const { error } = await supa.from('sessions').delete().eq('id', id);
-    if (error) return toast(error.message);
-    qs('#dlgEdit').close();
-    await loadSessions();
-    toast('Eliminada');
-  }
-
-  async function geocodeAddresses() {
-    const form = qs('#formEdit');
-    const s = form.elements.namedItem('loc_start_addr').value.trim();
-    const e = form.elements.namedItem('loc_end_addr').value.trim();
-    qs('#geoStatus').textContent = 'Buscando...';
-    try {
-      const [gs, ge] = await Promise.all([geocodeOnce(s), geocodeOnce(e)]);
-      // Si tienes columnas lat/lng separadas, asígnalas aquí
-      // form.elements.namedItem('loc_start_lat').value = gs?.lat ?? '';
-      // form.elements.namedItem('loc_start_lng').value = gs?.lon ?? '';
-      // Igual para fin
-      qs('#geoStatus').textContent = 'OK';
-    } catch (err) {
-      qs('#geoStatus').textContent = 'Error geocodificando';
-      console.error(err);
-    }
-  }
-
-  async function geocodeOnce(addr) {
-    if (!addr) return null;
-    const url = new URL('https://nominatim.openstreetmap.org/search');
-    url.searchParams.set('q', addr);
-    url.searchParams.set('format', 'json');
-    url.searchParams.set('limit', '1');
-    return retry(async () => {
-      const res = await fetch(url.href, { headers: { 'Accept-Language': 'es' } });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const arr = await res.json();
-      return arr[0] || null;
-    }, 3, 600);
-  }
-
-  async function retry(fn, times, delayMs) {
-    let last;
-    for (let i = 0; i < times; i++) {
-      try { return await fn(); } catch (e) { last = e; await new Promise(r => setTimeout(r, delayMs)); }
-    }
-    throw last;
-  }
-
-  function createSupabase() {
-    // Lee de variables globales definidas en app.js
-    const { SUPABASE_URL, SUPABASE_ANON_KEY } = window;
-    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
-
-  function toast(msg) {
-    console.log(msg);
-    alert(msg);
-  }
-})();
+bindEvents()
+init()
