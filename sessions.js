@@ -182,6 +182,8 @@ function renderTable() {
 }
 
 function openEditDialog(row) {
+    const attendees = await fetchAttendees(row.id)
+    setAttendeesUI(attendees)
     $('#e_id').value = row.id
     $('#e_date').value = row.date ?? todayStr()
     $('#e_worker').value = row.worker_id || ''
@@ -201,8 +203,8 @@ function openEditDialog(row) {
     $('#e_end_addr').value = row.loc_end_addr ?? ''
     $('#dlgEdit').showModal()
     // tras setear los inputs de la sesión…
-    const attendees = await fetchAttendees(row.id)
-    setAttendeesUI(attendees)
+
+    
 
 }
 

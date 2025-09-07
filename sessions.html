@@ -78,18 +78,19 @@
         <button type="button" id="btnCancel">Cancelar</button>
         <button type="submit" class="primary">Guardar</button>
       </menu>
-      <hr style="grid-column:1/-1">
-      <h4 style="grid-column:1/-1;margin:6px 0">Asistentes</h4>
 
-      <div id="attendeesList" class="grid" style="grid-column:1/-1; grid-template-columns: 1fr auto auto;">
-        <!-- filas dinámicas: [select trabajador] [btn -] [minutos opcional] -->
-      </div>
-
-      <div class="actions" style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-start;">
-        <button type="button" id="btnAddAttendee" class="ghost">Agregar asistente</button>
-      </div>
 
     </form>
+    <hr style="grid-column:1/-1">
+    <h4 style="grid-column:1/-1;margin:6px 0">Asistentes</h4>
+
+    <div id="attendeesList" class="grid" style="grid-column:1/-1; grid-template-columns: 1fr auto auto;">
+      <!-- filas dinámicas: [select trabajador] [btn -] [minutos opcional] -->
+    </div>
+
+    <div class="actions" style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-start;">
+      <button type="button" id="btnAddAttendee" class="ghost">Agregar asistente</button>
+    </div>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
