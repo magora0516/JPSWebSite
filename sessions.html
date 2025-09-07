@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sesiones</title>
+  <link rel="stylesheet" href="sessions.css">
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="left"><button id="btnVolver" class="btn-link">Volver</button></div>
+    <div class="center">
+      <h1>Sesiones</h1>
+    </div>
+    <div class="right"></div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h3>Filtro</h3>
+      <form id="formFilter" class="grid-3">
+        <label>Desde<input type="date" id="fFrom"></label>
+        <label>Hasta<input type="date" id="fTo"></label>
+        <div class="row-end"><button class="primary" type="submit">Buscar</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3>Listado</h3>
+      <div class="table-wrap">
+        <table class="list" id="tblSessions">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cliente</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Duración</th>
+              <th>Programada</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dlgEdit">
+    <form id="formEdit" method="dialog" class="grid">
+      <h3>Editar sesión</h3>
+      <input type="hidden" id="e_id">
+
+      <label>Cliente
+        <select id="e_client"></select>
+      </label>
+
+      <div class="grid-2">
+        <label>Fecha<input type="date" id="e_date" required></label>
+        <label>Programada
+          <input type="text" id="e_scheduled" disabled>
+        </label>
+      </div>
+
+      <fieldset class="mode">
+        <legend>Tiempo</legend>
+        <label class="inline"><input type="radio" name="modeTime" value="range" checked> Inicio/Fin</label>
+        <label class="inline"><input type="radio" name="modeTime" value="duration"> Duración</label>
+      </fieldset>
+
+      <div id="timeByRange" class="grid-2">
+        <label>Hora inicio<input type="time" id="e_start_time"></label>
+        <label>Hora fin<input type="time" id="e_end_time"></label>
+      </div>
+
+      <div id="timeByDuration" class="grid-1" style="display:none">
+        <label>Duración (min)<input type="number" id="e_minutes" min="0" step="1"></label>
+      </div>
+
+      <fieldset class="mode">
+        <legend>Ubicación</legend>
+        <label>Dirección inicio
+          <div class="row">
+            <input id="e_loc_start_addr" placeholder="Calle, ciudad...">
+            <button type="button" id="btnGeocodeStart">↦</button>
+          </div>
+        </label>
+        <label>Dirección fin
+          <div class="row">
+            <input id="e_loc_end_addr" placeholder="Calle, ciudad...">
+            <button type="button" id="btnGeocodeEnd">↦</button>
+          </div>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Trabajadores en esta sesión</legend>
+        <div class="table-wrap">
+          <table class="list" id="tblSW">
+            <thead>
+              <tr>
+                <th>Trabajador</th>
+                <th>Completo</th>
+                <th>Min</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="row">
+          <select id="sw_worker"></select>
+          <label class="inline">
+            <input type="checkbox" id="sw_full" checked> Completo
+          </label>
+          <input type="number" id="sw_minutes" placeholder="min" min="0" step="1" style="max-width:110px" disabled>
+          <input type="time" id="sw_start" disabled>
+          <input type="time" id="sw_end" disabled>
+          <button type="button" id="btnAddSW">Agregar</button>
+        </div>
+        <div class="note">Por defecto, todos trabajan el 100% de la sesión. Desmarca “Completo” solo para excepciones
+          parciales.</div>
+      </fieldset>
+
+
+      <menu>
+        <button type="button" id="btnDel" class="danger">Eliminar</button>
+        <button type="button" id="btnCancel">Cancelar</button>
+        <button type="submit" class="primary">Guardar</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sessions.js"></script>
+</body>
+
+</html>

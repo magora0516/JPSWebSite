@@ -454,7 +454,7 @@ function renderLogs(sessions) {
 }
 function renderWorkerPanel() {
   const a = state.activeSession
- 
+
 
   if (!a) {
     $('#state').textContent = 'Libre'
@@ -603,7 +603,7 @@ async function withTimeout(promise, ms = 5000) {
 
 
 
- async function startShift() {
+async function startShift() {
 
   $('#btnStop').disabled = true
 
@@ -614,13 +614,13 @@ async function withTimeout(promise, ms = 5000) {
   let worker // decide el worker según rol
   if (state.isAdmin) {
     const workerId = $('#workerSel').value
-    if (!workerId) { alert('Selecciona un trabajador');  $('#btnStop').disabled = false; return }
+    if (!workerId) { alert('Selecciona un trabajador'); $('#btnStop').disabled = false; return }
     worker = state.workers.find(w => w.id === workerId)
   } else {
     if (!state.currentWorker) { await ensureCurrentWorker() }
     worker = state.currentWorker
   }
-  if (!worker) { alert('Trabajador inválido');  $('#btnStop').disabled = false; return }
+  if (!worker) { alert('Trabajador inválido'); $('#btnStop').disabled = false; return }
 
   ensureGeo(async loc => {
     let locStartAddr = null
@@ -653,7 +653,7 @@ async function withTimeout(promise, ms = 5000) {
     const todaySessions = await supaFetchSessionsToday();
     renderLogs(todaySessions)
   })
-} 
+}
 
 
 
@@ -777,6 +777,13 @@ function bindEvents() {
   $('#btnClients')?.addEventListener('click', () => {
     window.location.href = 'clients.html'
   })
+
+  //btn clientes
+  $('#btnSessions')?.addEventListener('click', () => {
+    window.location.href = 'sessions.html'
+  })
+
+
 
 
 
