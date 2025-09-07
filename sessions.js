@@ -1,9 +1,9 @@
-// sessions.js
 // Supabase (igual que en tu app)
 const SUPABASE_URL = 'https://zsavhkkhdhlhwmtxqyon.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpzYXZoa2toZGhsaHdtdHhxeW9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ3MDU5ODUsImV4cCI6MjA3MDI4MTk4NX0.mecvMpBJDNeebA_bygW3zP_Qwdbp0An-9B8z1WYh59w'
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
+//Helpers
 const $ = s => document.querySelector(s)
 const pad = n => String(n).padStart(2, '0')
 const fmtDateTime = d => new Date(d).toLocaleString()
@@ -32,6 +32,7 @@ async function isEmailAdmin(email) {
 }
 async function refreshSession() {
     const { data: { session } } = await supa.auth.getSession()
+    console.log('Session:', session)    
     state.session = session
     const email = session?.user?.email || ''
     state.isAdmin = await isEmailAdmin(email)
@@ -218,6 +219,7 @@ function bindEvents() {
 }
 
 async function init() {
+    console.log('Sessions admin init')
     await refreshSession()
     const [workers, clients] = await Promise.all([fetchWorkers(), fetchClients()])
     state.workers = workers; state.clients = clients
