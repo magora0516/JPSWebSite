@@ -24,6 +24,15 @@ function todayStr() {
 
 const state = { isAdmin: false, session: null, clients: [], workers: [], rows: [] }
 
+async function fetchAttendees(sessionId) {
+    const { data, error } = await supa
+        .from('session_attendees')
+        .select('worker_id, role, minutes, notes')
+        .eq('session_id', sessionId)
+    if (error) { console.warn('attendees', error); return [] }
+    return data || []
+}
+
 async function isEmailAdmin(email) {
     if (!email) return false
     const { data, error } = await supa.from('admins').select('email').eq('email', email.toLowerCase()).maybeSingle()
@@ -63,14 +72,7 @@ async function fetchSessionsRange(fromYmd, toYmd, workerId = null, clientId = nu
     return data || []
 }
 
-async function fetchAttendees(sessionId) {
-    const { data, error } = await supa
-        .from('session_attendees')
-        .select('worker_id, role, minutes, notes')
-        .eq('session_id', sessionId)
-    if (error) { console.warn('attendees', error); return [] }
-    return data || []
-}
+
 
 async function upsertAttendees(sessionId, list) {
     // estrategia sencilla: borrar e insertar (transacción idealmente en RPC; aquí client-side)
