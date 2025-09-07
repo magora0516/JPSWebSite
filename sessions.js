@@ -63,6 +63,79 @@ async function fetchSessionsRange(fromYmd, toYmd, workerId = null, clientId = nu
     return data || []
 }
 
+async function fetchAttendees(sessionId) {
+    const { data, error } = await supa
+        .from('session_attendees')
+        .select('worker_id, role, minutes, notes')
+        .eq('session_id', sessionId)
+    if (error) { console.warn('attendees', error); return [] }
+    return data || []
+}
+
+async function upsertAttendees(sessionId, list) {
+    // estrategia sencilla: borrar e insertar (transacción idealmente en RPC; aquí client-side)
+    const { error: delErr } = await supa.from('session_attendees').delete().eq('session_id', sessionId)
+    if (delErr) { alert('No se pudieron limpiar asistentes: ' + delErr.message); return false }
+    if (!list.length) return true
+    const rows = list.map(a => ({ session_id: sessionId, ...a }))
+    const { error: insErr } = await supa.from('session_attendees').insert(rows)
+    if (insErr) { alert('No se pudieron guardar asistentes: ' + insErr.message); return false }
+    return true
+}
+
+function attendeeRowTemplate(value = {}) {
+    const workerOptions = ['<option value="">Selecciona</option>']
+        .concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
+    const sel = `<select class="att-worker">${workerOptions}</select>`
+    const minutes = `<input class="att-minutes" type="number" min="0" step="5" placeholder="min" style="max-width:90px">`
+    const removeBtn = `<button type="button" class="att-remove ghost" title="Quitar">–</button>`
+
+    const row = document.createElement('div')
+    row.className = 'att-row'
+    row.style.display = 'contents' // respeta la grid del contenedor
+    row.innerHTML = `
+      <div>${sel}</div>
+      <div>${removeBtn}</div>
+      <div>${minutes}</div>
+    `
+    // set values
+    const selEl = row.querySelector('.att-worker')
+    selEl.value = value.worker_id || ''
+    const minEl = row.querySelector('.att-minutes')
+    if (value.minutes != null) minEl.value = value.minutes
+    return row
+}
+
+function getAttendeesFromUI() {
+    const rows = Array.from(document.querySelectorAll('#attendeesList .att-row'))
+    const list = []
+    for (const r of rows) {
+        const worker_id = r.querySelector('.att-worker')?.value || ''
+        const minutes = r.querySelector('.att-minutes')?.value
+        if (worker_id) {
+            list.push({ worker_id, minutes: minutes ? parseInt(minutes, 10) : null })
+        }
+    }
+    // dedup por trabajador
+    const seen = new Set()
+    return list.filter(a => {
+        if (seen.has(a.worker_id)) return false
+        seen.add(a.worker_id); return true
+    })
+}
+
+function setAttendeesUI(attendees) {
+    const wrap = document.getElementById('attendeesList')
+    wrap.innerHTML = ''
+    attendees.forEach(a => wrap.appendChild(attendeeRowTemplate(a)))
+    if (!attendees.length) {
+        // sugerencia: si hay worker_id en la sesión, precargarlo como primera fila
+        const w = $('#e_worker').value
+        if (w) wrap.appendChild(attendeeRowTemplate({ worker_id: w }))
+    }
+}
+
+
 async function updateSession(id, patch) {
     const { data, error } = await supa.from('sessions').update(patch).eq('id', id).select().maybeSingle()
     if (error) { alert('No se pudo actualizar: ' + error.message); return null }
@@ -127,6 +200,10 @@ function openEditDialog(row) {
     $('#e_start_addr').value = row.loc_start_addr ?? ''
     $('#e_end_addr').value = row.loc_end_addr ?? ''
     $('#dlgEdit').showModal()
+    // tras setear los inputs de la sesión…
+    const attendees = await fetchAttendees(row.id)
+    setAttendeesUI(attendees)
+
 }
 
 function csvEscape(v) {
@@ -201,6 +278,20 @@ function bindEvents() {
         $('#dlgEdit').close()
     })
 
+    // Añadir filas
+    document.getElementById('btnAddAttendee')?.addEventListener('click', () => {
+        document.getElementById('attendeesList').appendChild(attendeeRowTemplate())
+    })
+
+    // Delegación para quitar
+    document.getElementById('attendeesList')?.addEventListener('click', (e) => {
+        if (e.target.classList.contains('att-remove')) {
+            const row = e.target.closest('.att-row')
+            if (row) row.remove()
+        }
+    })
+
+
     // guardar edición
     $('#formEdit').addEventListener('submit', async (e) => {
         e.preventDefault()
@@ -218,12 +309,21 @@ function bindEvents() {
             loc_end_addr: $('#e_end_addr').value.trim() || null
         }
         const saved = await updateSession(id, patch)
+
+        // tras const saved = await updateSession(id, patch) …
         if (saved) {
+            // guardar asistentes
+            const list = getAttendeesFromUI()
+            const ok = await upsertAttendees(id, list)
+            if (!ok) return // si falló, no cierres para que el usuario corrija
+
+            // actualizar la fila en memoria y refrescar tabla
             const idx = state.rows.findIndex(r => r.id === id)
             if (idx >= 0) state.rows[idx] = saved
             renderTable()
             $('#dlgEdit').close()
         }
+
     })
 }
 

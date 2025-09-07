@@ -1,12 +1,14 @@
 <!-- sessions.html -->
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sesiones</title>
   <link rel="stylesheet" href="sessions.css" />
 </head>
+
 <body>
   <header class="topbar">
     <div class="left">
@@ -76,10 +78,22 @@
         <button type="button" id="btnCancel">Cancelar</button>
         <button type="submit" class="primary">Guardar</button>
       </menu>
+      <hr style="grid-column:1/-1">
+      <h4 style="grid-column:1/-1;margin:6px 0">Asistentes</h4>
+
+      <div id="attendeesList" class="grid" style="grid-column:1/-1; grid-template-columns: 1fr auto auto;">
+        <!-- filas dinámicas: [select trabajador] [btn -] [minutos opcional] -->
+      </div>
+
+      <div class="actions" style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-start;">
+        <button type="button" id="btnAddAttendee" class="ghost">Agregar asistente</button>
+      </div>
+
     </form>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="sessions.js"></script>
 </body>
+
 </html>
