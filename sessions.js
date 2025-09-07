@@ -183,7 +183,7 @@ function renderTable() {
     })
 }
 
-function openEditDialog(row) {
+async function openEditDialog(row) {
     const attendees = await fetchAttendees(row.id)
     setAttendeesUI(attendees)
     $('#e_id').value = row.id
