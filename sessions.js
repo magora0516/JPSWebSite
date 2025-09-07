@@ -5,94 +5,94 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 const $ = s => document.querySelector(s)
-const pad = n => String(n).padStart(2,'0')
+const pad = n => String(n).padStart(2, '0')
 const fmtDateTime = d => new Date(d).toLocaleString()
 const fmtDuration = (ms) => {
-  if (!ms || ms < 0) return '—'
-  const h = Math.floor(ms / 3600000)
-  const m = Math.floor((ms % 3600000) / 60000)
-  const s = Math.floor((ms % 60000) / 1000)
-  return `${pad(h)}:${pad(m)}:${pad(s)}`
+    if (!ms || ms < 0) return '—'
+    const h = Math.floor(ms / 3600000)
+    const m = Math.floor((ms % 3600000) / 60000)
+    const s = Math.floor((ms % 60000) / 1000)
+    return `${pad(h)}:${pad(m)}:${pad(s)}`
 }
 const ymdLocal = d => {
-  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0')
-  return `${y}-${m}-${day}`
+    const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
 }
-function todayStr(){
-  const d=new Date(); d.setHours(0,0,0,0); return ymdLocal(d)
-}
-
-const state = { isAdmin:false, session:null, clients:[], workers:[], rows:[] }
-
-async function isEmailAdmin(email){
-  if(!email) return false
-  const { data, error } = await supa.from('admins').select('email').eq('email', email.toLowerCase()).maybeSingle()
-  if(error){ console.warn(error); return false }
-  return !!data
-}
-async function refreshSession(){
-  const { data:{session} } = await supa.auth.getSession()
-  state.session = session
-  const email = session?.user?.email || ''
-  state.isAdmin = await isEmailAdmin(email)
-  if(!session) { window.location.href = 'index.html#tab-worker'; return }
-  if(!state.isAdmin) { window.location.href = 'index.html#tab-worker'; return }
+function todayStr() {
+    const d = new Date(); d.setHours(0, 0, 0, 0); return ymdLocal(d)
 }
 
-async function fetchWorkers(){
-  const { data, error } = await supa.from('workers').select('id,name,active').eq('active', true).order('name')
-  if(error) { console.warn('workers', error); return [] }
-  return data || []
+const state = { isAdmin: false, session: null, clients: [], workers: [], rows: [] }
+
+async function isEmailAdmin(email) {
+    if (!email) return false
+    const { data, error } = await supa.from('admins').select('email').eq('email', email.toLowerCase()).maybeSingle()
+    if (error) { console.warn(error); return false }
+    return !!data
 }
-async function fetchClients(){
-  const { data, error } = await supa.from('clients').select('id,name').order('name')
-  if(error) { console.warn('clients', error); return [] }
-  return data || []
+async function refreshSession() {
+    const { data: { session } } = await supa.auth.getSession()
+    state.session = session
+    const email = session?.user?.email || ''
+    state.isAdmin = await isEmailAdmin(email)
+    if (!session) { window.location.href = 'index.html#tab-worker'; return }
+    if (!state.isAdmin) { window.location.href = 'index.html#tab-worker'; return }
 }
 
-async function fetchSessionsRange(fromYmd, toYmd, workerId=null, clientId=null){
-  let q = supa.from('sessions').select('*')
-    .gte('date', fromYmd).lte('date', toYmd)
-    .order('date', { ascending:true })
-    .order('start_at', { ascending:true })
-  if(workerId) q = q.eq('worker_id', workerId)
-  if(clientId) q = q.eq('client_id', clientId)
-  const { data, error } = await q
-  if(error){ console.warn('sessions', error); return [] }
-  return data || []
+async function fetchWorkers() {
+    const { data, error } = await supa.from('workers').select('id,name,active').eq('active', true).order('name')
+    if (error) { console.warn('workers', error); return [] }
+    return data || []
+}
+async function fetchClients() {
+    const { data, error } = await supa.from('clients').select('id,name').order('name')
+    if (error) { console.warn('clients', error); return [] }
+    return data || []
 }
 
-async function updateSession(id, patch){
-  const { data, error } = await supa.from('sessions').update(patch).eq('id', id).select().maybeSingle()
-  if(error){ alert('No se pudo actualizar: ' + error.message); return null }
-  return data
-}
-async function deleteSession(id){
-  const { error } = await supa.from('sessions').delete().eq('id', id)
-  if(error){ alert('No se pudo eliminar: ' + error.message) }
-}
-
-function fillSelects(){
-  $('#fWorker').innerHTML = ['<option value="">—</option>']
-    .concat(state.workers.map(w=>`<option value="${w.id}">${w.name}</option>`)).join('')
-  $('#fClient').innerHTML = ['<option value="">—</option>']
-    .concat(state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`)).join('')
-
-  // Diálogo de edición
-  $('#e_worker').innerHTML = ['<option value="">—</option>']
-    .concat(state.workers.map(w=>`<option value="${w.id}">${w.name}</option>`)).join('')
-  $('#e_client').innerHTML = ['<option value="">—</option>']
-    .concat(state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`)).join('')
+async function fetchSessionsRange(fromYmd, toYmd, workerId = null, clientId = null) {
+    let q = supa.from('sessions').select('*')
+        .gte('date', fromYmd).lte('date', toYmd)
+        .order('date', { ascending: true })
+        .order('start_at', { ascending: true })
+    if (workerId) q = q.eq('worker_id', workerId)
+    if (clientId) q = q.eq('client_id', clientId)
+    const { data, error } = await q
+    if (error) { console.warn('sessions', error); return [] }
+    return data || []
 }
 
-function renderTable(){
-  const tbody = $('#tblSessions tbody'); tbody.innerHTML = ''
-  state.rows.forEach(r=>{
-    const workerName = r.worker || (state.workers.find(w=>w.id===r.worker_id)?.name) || '—'
-    const clientName = (state.clients.find(c=>c.id===r.client_id)?.name) || '—'
-    const dur = r.end_at ? fmtDuration(new Date(r.end_at)-new Date(r.start_at)) : 'En curso'
-    const tr = document.createElement('tr')
-    tr.innerHTML = `
+async function updateSession(id, patch) {
+    const { data, error } = await supa.from('sessions').update(patch).eq('id', id).select().maybeSingle()
+    if (error) { alert('No se pudo actualizar: ' + error.message); return null }
+    return data
+}
+async function deleteSession(id) {
+    const { error } = await supa.from('sessions').delete().eq('id', id)
+    if (error) { alert('No se pudo eliminar: ' + error.message) }
+}
+
+function fillSelects() {
+    $('#fWorker').innerHTML = ['<option value="">—</option>']
+        .concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
+    $('#fClient').innerHTML = ['<option value="">—</option>']
+        .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
+
+    // Diálogo de edición
+    $('#e_worker').innerHTML = ['<option value="">—</option>']
+        .concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
+    $('#e_client').innerHTML = ['<option value="">—</option>']
+        .concat(state.clients.map(c => `<option value="${c.id}">${c.name}</option>`)).join('')
+}
+
+function renderTable() {
+    const tbody = $('#tblSessions tbody'); tbody.innerHTML = ''
+    state.rows.forEach(r => {
+        const workerName = r.worker || (state.workers.find(w => w.id === r.worker_id)?.name) || '—'
+        const clientName = (state.clients.find(c => c.id === r.client_id)?.name) || '—'
+        const dur = r.end_at ? fmtDuration(new Date(r.end_at) - new Date(r.start_at)) : 'En curso'
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
       <td>${r.date ?? ''}</td>
       <td>${workerName}</td>
       <td>${clientName}</td>
@@ -103,131 +103,131 @@ function renderTable(){
       <td>${r.loc_end_addr ?? ''}</td>
       <td><button class="btn-link" data-id="${r.id}">Editar</button></td>
     `
-    tbody.appendChild(tr)
-  })
+        tbody.appendChild(tr)
+    })
 }
 
-function openEditDialog(row){
-  $('#e_id').value = row.id
-  $('#e_date').value = row.date ?? todayStr()
-  $('#e_worker').value = row.worker_id || ''
-  $('#e_client').value = row.client_id || ''
-  // normaliza datetime-local (YYYY-MM-DDTHH:MM)
-  const toLocal = (iso) => !iso ? '' : new Date(iso).toISOString().slice(0,16)
-  $('#e_start').value = toLocal(row.start_at)
-  $('#e_end').value   = toLocal(row.end_at)
-  $('#e_start_addr').value = row.loc_start_addr ?? ''
-  $('#e_end_addr').value   = row.loc_end_addr ?? ''
-  $('#dlgEdit').showModal()
+function openEditDialog(row) {
+    $('#e_id').value = row.id
+    $('#e_date').value = row.date ?? todayStr()
+    $('#e_worker').value = row.worker_id || ''
+    $('#e_client').value = row.client_id || ''
+    // normaliza datetime-local (YYYY-MM-DDTHH:MM)
+    const toLocal = (iso) => !iso ? '' : new Date(iso).toISOString().slice(0, 16)
+    $('#e_start').value = toLocal(row.start_at)
+    $('#e_end').value = toLocal(row.end_at)
+    $('#e_start_addr').value = row.loc_start_addr ?? ''
+    $('#e_end_addr').value = row.loc_end_addr ?? ''
+    $('#dlgEdit').showModal()
 }
 
-function csvEscape(v){
-  if(v==null) return ''
-  const s = String(v)
-  return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s
+function csvEscape(v) {
+    if (v == null) return ''
+    const s = String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
-function downloadCsv(filename, csv){
-  const blob = new Blob([`\uFEFF${csv}`], { type:'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a'); a.href=url; a.download=filename
-  document.body.appendChild(a); a.click()
-  document.body.removeChild(a); URL.revokeObjectURL(url)
+function downloadCsv(filename, csv) {
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = filename
+    document.body.appendChild(a); a.click()
+    document.body.removeChild(a); URL.revokeObjectURL(url)
 }
-function buildCsv(rows){
-  const headers = ['date','worker_name','client_name','start_at','end_at','duration_hms','loc_start_addr','loc_end_addr']
-  const lines = [headers.join(',')]
-  rows.forEach(r=>{
-    const workerName = r.worker || (state.workers.find(w=>w.id===r.worker_id)?.name) || ''
-    const clientName = (state.clients.find(c=>c.id===r.client_id)?.name) || ''
-    const dur = r.end_at ? fmtDuration(new Date(r.end_at)-new Date(r.start_at)) : ''
-    lines.push([
-      r.date||'', workerName, clientName,
-      r.start_at||'', r.end_at||'', dur,
-      r.loc_start_addr||'', r.loc_end_addr||''
-    ].map(csvEscape).join(','))
-  })
-  return lines.join('\n')
+function buildCsv(rows) {
+    const headers = ['date', 'worker_name', 'client_name', 'start_at', 'end_at', 'duration_hms', 'loc_start_addr', 'loc_end_addr']
+    const lines = [headers.join(',')]
+    rows.forEach(r => {
+        const workerName = r.worker || (state.workers.find(w => w.id === r.worker_id)?.name) || ''
+        const clientName = (state.clients.find(c => c.id === r.client_id)?.name) || ''
+        const dur = r.end_at ? fmtDuration(new Date(r.end_at) - new Date(r.start_at)) : ''
+        lines.push([
+            r.date || '', workerName, clientName,
+            r.start_at || '', r.end_at || '', dur,
+            r.loc_start_addr || '', r.loc_end_addr || ''
+        ].map(csvEscape).join(','))
+    })
+    return lines.join('\n')
 }
 
-function bindEvents(){
-  // volver al index (como en clientes/calendario)
-  $('#btnVolver')?.addEventListener('click', () => window.location.href = 'index.html#tab-admin')
+function bindEvents() {
+    // volver al index (como en clientes/calendario)
+    $('#btnVolver')?.addEventListener('click', () => window.location.href = 'index.html#tab-admin')
 
-  // buscar
-  $('#formFilter').addEventListener('submit', async (e)=>{
-    e.preventDefault()
+    // buscar
+    $('#formFilter').addEventListener('submit', async (e) => {
+        e.preventDefault()
+        await refreshSession()
+        if (!state.isAdmin) { alert('Solo admin'); return }
+        const from = $('#fFrom').value || todayStr()
+        const to = $('#fTo').value || from
+        const workerId = $('#fWorker').value || null
+        const clientId = $('#fClient').value || null
+        state.rows = await fetchSessionsRange(from, to, workerId, clientId)
+        renderTable()
+    })
+
+    // exportar
+    $('#btnExport').addEventListener('click', () => {
+        if (!state.rows?.length) { alert('No hay datos para exportar'); return }
+        downloadCsv('sessions.csv', buildCsv(state.rows))
+    })
+
+    // abrir edición
+    $('#tblSessions').addEventListener('click', (e) => {
+        const id = e.target.closest('button[data-id]')?.getAttribute('data-id')
+        if (!id) return
+        const row = state.rows.find(r => r.id === id)
+        if (row) openEditDialog(row)
+    })
+
+    // diálogo
+    $('#btnCancel').addEventListener('click', () => $('#dlgEdit').close())
+    $('#btnDel').addEventListener('click', async () => {
+        if (!confirm('¿Eliminar esta sesión?')) return
+        const id = $('#e_id').value
+        await deleteSession(id)
+        state.rows = state.rows.filter(r => r.id !== id)
+        renderTable()
+        $('#dlgEdit').close()
+    })
+
+    // guardar edición
+    $('#formEdit').addEventListener('submit', async (e) => {
+        e.preventDefault()
+        await refreshSession()
+        if (!state.isAdmin) { alert('Solo admin'); return }
+
+        const id = $('#e_id').value
+        const patch = {
+            date: $('#e_date').value || null,
+            worker_id: $('#e_worker').value || null,
+            client_id: $('#e_client').value || null,
+            start_at: $('#e_start').value ? new Date($('#e_start').value).toISOString() : null,
+            end_at: $('#e_end').value ? new Date($('#e_end').value).toISOString() : null,
+            loc_start_addr: $('#e_start_addr').value.trim() || null,
+            loc_end_addr: $('#e_end_addr').value.trim() || null
+        }
+        const saved = await updateSession(id, patch)
+        if (saved) {
+            const idx = state.rows.findIndex(r => r.id === id)
+            if (idx >= 0) state.rows[idx] = saved
+            renderTable()
+            $('#dlgEdit').close()
+        }
+    })
+}
+
+async function init() {
     await refreshSession()
-    if(!state.isAdmin){ alert('Solo admin'); return }
-    const from = $('#fFrom').value || todayStr()
-    const to   = $('#fTo').value   || from
-    const workerId = $('#fWorker').value || null
-    const clientId = $('#fClient').value || null
-    state.rows = await fetchSessionsRange(from, to, workerId, clientId)
+    const [workers, clients] = await Promise.all([fetchWorkers(), fetchClients()])
+    state.workers = workers; state.clients = clients
+    fillSelects()
+
+    // precarga: hoy
+    $('#fFrom').value = todayStr()
+    $('#fTo').value = todayStr()
+    state.rows = await fetchSessionsRange(todayStr(), todayStr(), null, null)
     renderTable()
-  })
-
-  // exportar
-  $('#btnExport').addEventListener('click', ()=>{
-    if(!state.rows?.length){ alert('No hay datos para exportar'); return }
-    downloadCsv('sessions.csv', buildCsv(state.rows))
-  })
-
-  // abrir edición
-  $('#tblSessions').addEventListener('click', (e)=>{
-    const id = e.target.closest('button[data-id]')?.getAttribute('data-id')
-    if(!id) return
-    const row = state.rows.find(r=>r.id===id)
-    if(row) openEditDialog(row)
-  })
-
-  // diálogo
-  $('#btnCancel').addEventListener('click', ()=> $('#dlgEdit').close())
-  $('#btnDel').addEventListener('click', async ()=>{
-    if(!confirm('¿Eliminar esta sesión?')) return
-    const id = $('#e_id').value
-    await deleteSession(id)
-    state.rows = state.rows.filter(r=>r.id!==id)
-    renderTable()
-    $('#dlgEdit').close()
-  })
-
-  // guardar edición
-  $('#formEdit').addEventListener('submit', async (e)=>{
-    e.preventDefault()
-    await refreshSession()
-    if(!state.isAdmin){ alert('Solo admin'); return }
-
-    const id = $('#e_id').value
-    const patch = {
-      date: $('#e_date').value || null,
-      worker_id: $('#e_worker').value || null,
-      client_id: $('#e_client').value || null,
-      start_at: $('#e_start').value ? new Date($('#e_start').value).toISOString() : null,
-      end_at:   $('#e_end').value   ? new Date($('#e_end').value).toISOString()   : null,
-      loc_start_addr: $('#e_start_addr').value.trim() || null,
-      loc_end_addr:   $('#e_end_addr').value.trim()   || null
-    }
-    const saved = await updateSession(id, patch)
-    if(saved){
-      const idx = state.rows.findIndex(r=>r.id===id)
-      if(idx>=0) state.rows[idx] = saved
-      renderTable()
-      $('#dlgEdit').close()
-    }
-  })
-}
-
-async function init(){
-  await refreshSession()
-  const [workers, clients] = await Promise.all([ fetchWorkers(), fetchClients() ])
-  state.workers = workers; state.clients = clients
-  fillSelects()
-
-  // precarga: hoy
-  $('#fFrom').value = todayStr()
-  $('#fTo').value   = todayStr()
-  state.rows = await fetchSessionsRange(todayStr(), todayStr(), null, null)
-  renderTable()
 }
 
 bindEvents()
