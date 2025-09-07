@@ -223,15 +223,15 @@ function bindEvents() {
 async function init() {
     console.log('Sessions admin init')
     await refreshSession()
-    //const [workers, clients] = await Promise.all([fetchWorkers(), fetchClients()])
-    //state.workers = workers; state.clients = clients
-    //fillSelects()
+    const [workers, clients] = await Promise.all([fetchWorkers(), fetchClients()])
+    state.workers = workers; state.clients = clients
+    fillSelects()
 
     // precarga: hoy
-    //$('#fFrom').value = todayStr()
-    //$('#fTo').value = todayStr()
-    //state.rows = await fetchSessionsRange(todayStr(), todayStr(), null, null)
-    //renderTable()
+    $('#fFrom').value = todayStr()
+    $('#fTo').value = todayStr()
+    state.rows = await fetchSessionsRange(todayStr(), todayStr(), null, null)
+    renderTable()
 }
 
 bindEvents()
