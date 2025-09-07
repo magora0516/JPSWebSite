@@ -1,142 +1,192 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sesiones</title>
+  <title>Sesiones | JP’s Magic Cleaning</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="sessions.css">
 </head>
-
 <body>
   <header class="topbar">
-    <div class="left"><button id="btnVolver" class="btn-link">Volver</button></div>
-    <div class="center">
-      <h1>Sesiones</h1>
-    </div>
-    <div class="right"></div>
+    <a href="index.html" class="brand">
+      <img src="logo_header.png" alt="JP’s Magic Cleaning" height="28">
+    </a>
+    <nav class="nav">
+      <a href="calendar.html">Calendario</a>
+      <a href="clients.html">Clientes</a>
+      <strong>Sesiones</strong>
+    </nav>
   </header>
 
   <main class="container">
-    <section class="card">
-      <h3>Filtro</h3>
-      <form id="formFilter" class="grid-3">
-        <label>Desde<input type="date" id="fFrom"></label>
-        <label>Hasta<input type="date" id="fTo"></label>
-        <div class="row-end"><button class="primary" type="submit">Buscar</button></div>
-      </form>
+    <h1>Sesiones</h1>
+
+    <section class="filters">
+      <label>
+        Desde
+        <input type="date" id="fFrom">
+      </label>
+      <label>
+        Hasta
+        <input type="date" id="fTo">
+      </label>
+      <label>
+        Trabajador
+        <select id="fWorker"></select>
+      </label>
+      <label>
+        Cliente
+        <select id="fClient"></select>
+      </label>
+      <button id="btnFilter">Filtrar</button>
+      <button id="btnNew">Nueva sesión</button>
     </section>
 
-    <section class="card">
-      <h3>Listado</h3>
-      <div class="table-wrap">
-        <table class="list" id="tblSessions">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Inicio</th>
-              <th>Fin</th>
-              <th>Duración</th>
-              <th>Programada</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <section id="flagScheduled" class="hint" hidden>
+      Coincidencias con agenda encontradas para este rango.
+    </section>
+
+    <section class="table-wrap">
+      <table id="tblSessions">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Trabajadores</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+            <th>Duración</th>
+            <th>Programada</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="pager">
+        <button id="btnPrev" disabled>Anterior</button>
+        <span id="pageInfo">1</span>
+        <button id="btnNext" disabled>Siguiente</button>
       </div>
     </section>
   </main>
 
   <dialog id="dlgEdit">
-    <form id="formEdit" method="dialog" class="grid">
-      <h3>Editar sesión</h3>
-      <input type="hidden" id="e_id">
+    <form id="formEdit" method="dialog">
+      <h2 id="dlgTitle">Nueva sesión</h2>
 
-      <label>Cliente
-        <select id="e_client"></select>
-      </label>
-
-      <div class="grid-2">
-        <label>Fecha<input type="date" id="e_date" required></label>
-        <label>Programada
-          <input type="text" id="e_scheduled" disabled>
+      <div class="grid2">
+        <label>
+          Fecha
+          <input type="date" name="date" required>
+        </label>
+        <label>
+          Cliente
+          <select name="client_id" required></select>
         </label>
       </div>
 
-      <fieldset class="mode">
-        <legend>Tiempo</legend>
-        <label class="inline"><input type="radio" name="modeTime" value="range" checked> Inicio/Fin</label>
-        <label class="inline"><input type="radio" name="modeTime" value="duration"> Duración</label>
-      </fieldset>
-
-      <div id="timeByRange" class="grid-2">
-        <label>Hora inicio<input type="time" id="e_start_time"></label>
-        <label>Hora fin<input type="time" id="e_end_time"></label>
-      </div>
-
-      <div id="timeByDuration" class="grid-1" style="display:none">
-        <label>Duración (min)<input type="number" id="e_minutes" min="0" step="1"></label>
-      </div>
-
-      <fieldset class="mode">
-        <legend>Ubicación</legend>
-        <label>Dirección inicio
-          <div class="row">
-            <input id="e_loc_start_addr" placeholder="Calle, ciudad...">
-            <button type="button" id="btnGeocodeStart">↦</button>
-          </div>
+      <fieldset>
+        <legend>Tiempo del servicio</legend>
+        <label class="row">
+          <input type="radio" name="time_mode" value="range" checked>
+          Inicio y fin
         </label>
-        <label>Dirección fin
-          <div class="row">
-            <input id="e_loc_end_addr" placeholder="Calle, ciudad...">
-            <button type="button" id="btnGeocodeEnd">↦</button>
-          </div>
+        <div class="grid3" data-mode="range">
+          <label>
+            Inicio
+            <input type="time" name="start_at">
+          </label>
+          <label>
+            Fin
+            <input type="time" name="end_at">
+          </label>
+          <label>
+            Duración calculada
+            <input type="text" name="duration_calc" readonly>
+          </label>
+        </div>
+
+        <label class="row">
+          <input type="radio" name="time_mode" value="total">
+          Duración total
         </label>
+        <div class="grid2" data-mode="total" hidden>
+          <label>
+            Minutos totales
+            <input type="number" min="1" step="1" name="minutes_total">
+          </label>
+        </div>
       </fieldset>
 
       <fieldset>
-        <legend>Trabajadores en esta sesión</legend>
-        <div class="table-wrap">
-          <table class="list" id="tblSW">
-            <thead>
-              <tr>
-                <th>Trabajador</th>
-                <th>Completo</th>
-                <th>Min</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="row">
-          <select id="sw_worker"></select>
-          <label class="inline">
-            <input type="checkbox" id="sw_full" checked> Completo
-          </label>
-          <input type="number" id="sw_minutes" placeholder="min" min="0" step="1" style="max-width:110px" disabled>
-          <input type="time" id="sw_start" disabled>
-          <input type="time" id="sw_end" disabled>
-          <button type="button" id="btnAddSW">Agregar</button>
-        </div>
-        <div class="note">Por defecto, todos trabajan el 100% de la sesión. Desmarca “Completo” solo para excepciones
-          parciales.</div>
+        <legend>Trabajadores</legend>
+        <div id="workersList"></div>
+        <button type="button" id="btnAddWorker">Agregar trabajador</button>
+        <p class="note">
+          Por defecto todos trabajan tiempo completo. Para parciales, desmarca “tiempo completo” y define minutos o rango.
+        </p>
+        <p id="sumWarning" class="warn" hidden>
+          La suma de parciales excede la duración total.
+        </p>
       </fieldset>
 
+      <fieldset>
+        <legend>Ubicación</legend>
+        <div class="grid2">
+          <label>
+            Inicio dirección
+            <input type="text" name="loc_start_addr" placeholder="Calle, ciudad">
+          </label>
+          <label>
+            Fin dirección
+            <input type="text" name="loc_end_addr" placeholder="Calle, ciudad">
+          </label>
+        </div>
+        <div class="row">
+          <button type="button" id="btnGeocode">Geocodificar</button>
+          <span id="geoStatus" class="muted"></span>
+        </div>
+      </fieldset>
 
-      <menu>
-        <button type="button" id="btnDel" class="danger">Eliminar</button>
-        <button type="button" id="btnCancel">Cancelar</button>
-        <button type="submit" class="primary">Guardar</button>
+      <menu class="actions">
+        <button value="cancel">Cancelar</button>
+        <button id="btnDelete" class="danger" type="button" hidden>Eliminar</button>
+        <button id="btnSave" class="primary" type="submit">Guardar</button>
       </menu>
+
+      <input type="hidden" name="id">
     </form>
   </dialog>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <template id="tplWorkerRow">
+    <div class="worker-row">
+      <select name="worker_id"></select>
+      <label class="chk">
+        <input type="checkbox" name="full_duration" checked>
+        Tiempo completo
+      </label>
+      <div class="partial" hidden>
+        <label>
+          Minutos
+          <input type="number" min="1" step="1" name="minutes">
+        </label>
+        <label>
+          Inicio
+          <input type="time" name="w_start_at">
+        </label>
+        <label>
+          Fin
+          <input type="time" name="w_end_at">
+        </label>
+      </div>
+      <button type="button" class="remove">Quitar</button>
+    </div>
+  </template>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
   <script src="sessions.js"></script>
 </body>
-
 </html>
