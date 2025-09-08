@@ -77,10 +77,12 @@ async function fetchSessionsRange(fromYmd, toYmd, workerId = null, clientId = nu
 async function upsertAttendees(sessionId, list) {
     // estrategia sencilla: borrar e insertar (transacción idealmente en RPC; aquí client-side)
     const { error: delErr } = await supa.from('session_attendees').delete().eq('session_id', sessionId)
+    console.log('SessionID: ', sessionID)
     if (delErr) { alert('No se pudieron limpiar asistentes: ' + delErr.message); return false }
     if (!list.length) return true
     const rows = list.map(a => ({ session_id: sessionId, ...a }))
     const { error: insErr } = await supa.from('session_attendees').insert(rows)
+    console.log('Rows: ', rows)
     if (insErr) { alert('No se pudieron guardar asistentes: ' + insErr.message); return false }
     return true
 }
