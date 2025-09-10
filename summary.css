@@ -101,7 +101,7 @@ button {
     padding: 8px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
-    width: 100%
+    width: 95%
 }
 
 button.primary {
@@ -116,7 +116,7 @@ button.primary {
 }
 
 .list {
-    width: 100%;
+    width: 95%;
     border-collapse: collapse
 }
 
@@ -128,7 +128,7 @@ button.primary {
     vertical-align: top
 }
 
-@media (max-width:720px) {
+@media (max-width:640px) {
     .grid {
         grid-template-columns: 1fr
     }
