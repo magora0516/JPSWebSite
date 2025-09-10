@@ -91,7 +91,7 @@ body {
     grid-column: 1 / -1;
     display: flex;
     gap: 8px;
-    justify-content: flex-end
+    justify-content: flex-start
 }
 
 input,
@@ -110,7 +110,6 @@ button.primary {
     color: #fff;
     border-color: transparent;
     cursor: pointer;
-    justify-content: flex-start;
 }
 
 .table-wrap {
