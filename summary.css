@@ -107,7 +107,8 @@ button {
 button.primary {
     background: var(--primary);
     color: #fff;
-    border-color: transparent
+    border-color: transparent;
+    cursor: pointer
 }
 
 .table-wrap {
