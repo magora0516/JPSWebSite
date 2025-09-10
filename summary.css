@@ -25,6 +25,19 @@ body {
     margin: 0 auto
 }
 
+#btnVolver {
+    background-color: var(--primary, #2563eb);
+    width: 60%;
+    max-width: 150px;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+
 .topbar .left,
 .topbar .center,
 .topbar .right {
