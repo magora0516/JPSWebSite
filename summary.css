@@ -98,6 +98,7 @@ input,
 select,
 button {
     font: inherit;
+    max-width: 300px;
     padding: 8px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
