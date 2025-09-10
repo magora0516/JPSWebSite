@@ -98,7 +98,7 @@ input,
 select,
 button {
     font: inherit;
-    max-width: 300px;
+    max-width: 200px;
     padding: 8px 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -109,7 +109,8 @@ button.primary {
     background: var(--primary);
     color: #fff;
     border-color: transparent;
-    cursor: pointer
+    cursor: pointer;
+    justify-content: flex-start;
 }
 
 .table-wrap {
