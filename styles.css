@@ -129,6 +129,7 @@ button {
 }
 .primary { background: var(--brand); color: #fff; }
 .ok { background: var(--ok); color: #fff; }
+.btn-link { background: var(--brand); color: #fff; }
 .danger { background: var(--warn); color: #fff; }
 .ghost { background: #fff; border: 1px solid var(--border); }
 

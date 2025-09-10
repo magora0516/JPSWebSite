@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Resumen del día</title>
+    <link rel="stylesheet" href="summary.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="left">
+            <button id="btnVolver" class="btn-link">Volver</button>
+        </div>
+        <div class="center">
+            <h1>Resumen del tiempo trabajado</h1>
+        </div>
+        <div class="right"></div>
+    </header>
+
+    <main class="container">
+        <section class="card">
+            <h3>Filtros</h3>
+            <form id="formFilter" class="grid">
+                <label>Fecha
+                    <input type="date" id="fDate" />
+                </label>
+                <div class="actions">
+                    <button type="submit" class="primary">Consultar</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h3>Servicios del día</h3>
+            <div class="table-wrap">
+                <table class="list" id="tblSummary">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="text-align:right"><strong>Total del día</strong></td>
+                            <td id="totalCell"><strong>00:00:00</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="summary.js"></script>
+</body>
+
+</html>

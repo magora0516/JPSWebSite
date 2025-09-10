@@ -208,7 +208,7 @@ async function openEditDialog(row) {
     $('#dlgEdit').showModal()
     // tras setear los inputs de la sesión…
 
-    
+
 
 }
 

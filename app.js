@@ -768,6 +768,11 @@ function bindEvents() {
     }
   })
 
+
+  $('#btnSummary')?.addEventListener('click', () => {
+    window.location.href = 'summary.html'
+  })
+
   //btn calendario
   $('#btnCalendar')?.addEventListener('click', () => {
     window.location.href = 'calendar.html'
