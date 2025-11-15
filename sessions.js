@@ -187,11 +187,11 @@ function renderTable() {
 
 async function openEditDialog(row) {
     const attendees = await fetchAttendees(row.id)
-    setAttendeesUI(attendees)
     $('#e_id').value = row.id
     $('#e_date').value = row.date ?? todayStr()
     $('#e_worker').value = row.worker_id || ''
     $('#e_client').value = row.client_id || ''
+    setAttendeesUI(attendees)
     // normaliza datetime-local (YYYY-MM-DDTHH:MM)
     const toLocalInputValue = (iso) => {
         if (!iso) return '';
