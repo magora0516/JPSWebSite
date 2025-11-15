@@ -20,11 +20,7 @@ function todayStr() {
   d.setHours(0, 0, 0, 0) // quita hora, minuto y segundo
   return fmtDate(d)
 }
-function setToday() {
-  $('#today').textContent = new Date().toLocaleDateString(undefined, {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-  })
-}
+
 function uid() { return Math.random().toString(36).slice(2, 10) }
 
 // --- Estado global ---
@@ -57,8 +53,8 @@ function applyRoleUI() {
   if (tabs) tabs.classList.toggle('hidden', !state.isAdmin)
 
   // ocultar select de trabajador en la vista del trabajador para no-admin
-  const workerSelectWrap = document.querySelector('label+select#workerSel')?.parentElement
-  if (workerSelectWrap) workerSelectWrap.style.display = state.isAdmin ? 'block' : 'none'
+  //const workerSelectWrap = document.querySelector('label+select#workerSel')?.parentElement
+  //if (workerSelectWrap) workerSelectWrap.style.display = state.isAdmin ? 'block' : 'none'
 }
 
 async function refreshSession() {
@@ -401,7 +397,7 @@ async function getActiveSessionForCurrentUser() {
 // --- Renderizado de tablas y paneles ---
 function fillWorkerSelects() {
   const opts = ['<option value="">Selecciona</option>'].concat(state.workers.map(w => `<option value="${w.id}">${w.name}</option>`)).join('')
-  $('#workerSel').innerHTML = opts
+  //$('#workerSel').innerHTML = opts
   $('#schedWorkerSel').innerHTML = opts
 }
 function renderWorkers() {
@@ -612,14 +608,14 @@ async function startShift() {
   if (!clientId) { alert('Selecciona un cliente'); $('#btnStop').disabled = false; return }
 
   let worker // decide el worker según rol
-  if (state.isAdmin) {
-    const workerId = $('#workerSel').value
-    if (!workerId) { alert('Selecciona un trabajador'); $('#btnStop').disabled = false; return }
-    worker = state.workers.find(w => w.id === workerId)
-  } else {
+  // if (state.isAdmin) {
+  //   const workerId = $('#workerSel').value
+  //   if (!workerId) { alert('Selecciona un trabajador'); $('#btnStop').disabled = false; return }
+  //   worker = state.workers.find(w => w.id === workerId)
+  // } else {
     if (!state.currentWorker) { await ensureCurrentWorker() }
     worker = state.currentWorker
-  }
+  //}
   if (!worker) { alert('Trabajador inválido'); $('#btnStop').disabled = false; return }
 
   ensureGeo(async loc => {
