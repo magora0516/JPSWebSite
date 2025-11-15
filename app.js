@@ -843,7 +843,7 @@ function initForms() { $('#schedDate').value = todayStr() }
 
 // --- Inicialización principal ---
 async function init() {
-  setToday(); initTabs(); bindEvents(); initForms();
+  initTabs(); bindEvents(); initForms();
   state.workers = await supaFetchWorkers(); renderWorkers()
   state.clients = await supaFetchClients(); renderClients()
   state.schedules = await supaFetchSchedules(); renderSchedules()
