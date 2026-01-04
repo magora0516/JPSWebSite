@@ -10,6 +10,13 @@ const fmtYmd = d => {
     return `${y}-${m}-${day}`
 }
 
+ymdLocal(d) {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
 function ymdToDateLocal(ymd){
     const [y,m,d] = ymd.split('-').map(Number)
     return new Date(y, m-1, d, 0,0,0,0)
