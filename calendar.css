@@ -202,20 +202,30 @@ button.danger {
 
   .weekslist{
     margin-top: 8px;
-    display: grid;
-    gap: 6px;
-  }
-
-  .weekrow{
     display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 6px 8px;
-    border: 1px solid #eee;
-    border-radius: 10px;
-    background-color: #fff;
-    font-size: 13px;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
   }
+  
+  .weekchip{
+    flex: 0 0 auto;
+    border: 1px solid #eee;
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: #fff;
+    font-size: 12px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+  
+  .weekchip .amt{
+    font-weight: 700;
+  }
+  
 
   .weekrow .range{
     color:#555;

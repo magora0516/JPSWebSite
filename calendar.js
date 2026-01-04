@@ -132,16 +132,22 @@ function addDays(d, n){
     if (!el) return
     el.innerHTML = ''
   
+  function renderWeeksList(weeks){
+    const el = document.getElementById('weeksList')
+    if (!el) return
+    el.innerHTML = ''
+  
     for (const w of weeks){
-      const div = document.createElement('div')
-      div.className = 'weekrow'
-      div.innerHTML = `
-        <span class="range">${fmtYmd(w.start)} a ${fmtYmd(w.end)}</span>
+      const chip = document.createElement('div')
+      chip.className = 'weekchip'
+      chip.innerHTML = `
+        <span>${fmtYmd(w.start).slice(5)} a ${fmtYmd(w.end).slice(5)}</span>
         <span class="amt">${money(w.sum)}</span>
       `
-      el.appendChild(div)
+      el.appendChild(chip)
     }
   }
+  
   
 
 // estado
