@@ -127,10 +127,6 @@ function addDays(d, n){
     return weeks
   }
   
-  function renderWeeksList(weeks){
-    const el = document.getElementById('weeksList')
-    if (!el) return
-    el.innerHTML = ''
   
   function renderWeeksList(weeks){
     const el = document.getElementById('weeksList')
