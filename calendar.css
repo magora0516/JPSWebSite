@@ -199,7 +199,32 @@ button.danger {
     color: #666;
     margin-top: 4px;
   }
+
+  .weekslist{
+    margin-top: 8px;
+    display: grid;
+    gap: 6px;
+  }
+
+  .weekrow{
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background-color: #fff;
+    font-size: 13px;
+  }
+
+  .weekrow .range{
+    color:#555;
+  }
   
+  .weekrow .amt{
+        font-weight: 700;
+  }
+
   @media (max-width:640px){
     .totalsbar{ grid-template-columns: 1fr; }
   }

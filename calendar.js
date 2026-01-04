@@ -63,20 +63,83 @@ function ymdToDateLocal(ymd){
   
     return { sumDay, sumWeek, sumMonth, d0, w0, w1, m0, m1 }
   }
-  
+
   function setTotalsUI(t){
     const $ = s => document.querySelector(s)
     $('#totalDay').textContent = money(t.sumDay)
-    $('#totalWeek').textContent = money(t.sumWeek)
     $('#totalMonth').textContent = money(t.sumMonth)
   
     $('#totalDayHint').textContent = fmtYmd(t.d0)
-    $('#totalWeekHint').textContent = `${fmtYmd(t.w0)} a ${fmtYmd(t.w1)}`
     $('#totalMonthHint').textContent = `${fmtYmd(t.m0)} a ${fmtYmd(t.m1)}`
   }
   
 
+
 function uid() { return Math.random().toString(36).slice(2, 10) }
+
+//helpers values per week
+
+function addDays(d, n){
+    const x = new Date(d)
+    x.setDate(x.getDate() + n)
+    return x
+  }
+  
+  function sameDay(a,b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate()
+  }
+  
+  function weekKeyMonday(d){
+    const m = startOfWeekMonday(d)
+    return fmtYmd(m)
+  }
+  
+  function calcWeeklyBuckets(rows, visibleStart, visibleEnd){
+    const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
+    const v0 = new Date(visibleStart.getFullYear(), visibleStart.getMonth(), visibleStart.getDate(), 0,0,0,0)
+    const v1 = new Date(visibleEnd.getFullYear(), visibleEnd.getMonth(), visibleEnd.getDate(), 0,0,0,0)
+  
+    // crea todas las semanas visibles (lunes-domingo) dentro del grid
+    const weeks = []
+    let cur = startOfWeekMonday(v0)
+    while (cur < v1){
+      const wStart = new Date(cur)
+      const wEnd = addDays(wStart, 6)
+      weeks.push({ start: wStart, end: wEnd, sum: 0 })
+      cur = addDays(cur, 7)
+    }
+  
+    // índice por key (lunes)
+    const idx = Object.fromEntries(weeks.map((w,i)=>[fmtYmd(w.start), i]))
+  
+    for (const r of rows){
+      const dt = ymdToDateLocal(r.date)
+      if (dt < v0 || dt >= v1) continue
+      const price = Number(cById[r.client_id]?.service_value) || 0
+      const k = weekKeyMonday(dt)
+      const i = idx[k]
+      if (i !== undefined) weeks[i].sum += price
+    }
+  
+    return weeks
+  }
+  
+  function renderWeeksList(weeks){
+    const el = document.getElementById('weeksList')
+    if (!el) return
+    el.innerHTML = ''
+  
+    for (const w of weeks){
+      const div = document.createElement('div')
+      div.className = 'weekrow'
+      div.innerHTML = `
+        <span class="range">${fmtYmd(w.start)} a ${fmtYmd(w.end)}</span>
+        <span class="amt">${money(w.sum)}</span>
+      `
+      el.appendChild(div)
+    }
+  }
+  
 
 // estado
 
@@ -146,8 +209,14 @@ function fillSelects() {
 
 function money(v){
     const n = Number(v)
+    const x = Number.isFinite(n) ? n : 0
     if (!Number.isFinite(n)) return '$0'
-    return n.toLocaleString('en-US', { style:'currency', currency:'USD' })
+    return n.toLocaleString('en-US', { 
+        style:'currency', 
+        currency:'USD',
+        minimumFractionDigits:0,
+        maximumFractionDigits: 0
+    })
   }
   
 
@@ -299,15 +368,23 @@ async function init() {
             try {
               const startYmd = fmtYmd(info.start)
               const endYmd = fmtYmd(info.end)
+          
               const rows = await fetchSchedulesRange(startYmd, endYmd)
           
               state.schedules = rows
-              if (!state.refDayYmd) state.refDayYmd = ymdLocal(new Date())
-              setTotalsUI(calcTotals(rows, state.refDayYmd))
+              state.visibleStart = info.start
+              state.visibleEnd = info.end
+          
+              const weeks = calcWeeklyBuckets(rows, info.start, info.end)
+              renderWeeksList(weeks)
           
               success(schedulesToEvents(rows))
-            } catch (e) { console.error(e); failure(e) }
+            } catch (e) {
+              console.error(e)
+              failure(e)
+            }
           }
+
           
     })
     calendar.render()
