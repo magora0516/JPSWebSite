@@ -40,38 +40,41 @@ function ymdToDateLocal(ymd){
   function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0) }
   function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0) }
   
-  function calcTotals(rows, refDayYmd){
+  function calcTotals(rows, refDayYmd, monthRefDate){
     const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
-    const ref = ymdToDateLocal(refDayYmd)
   
     const d0 = ymdToDateLocal(refDayYmd)
-    const w0 = startOfWeekMonday(ref)
-    const w1 = endOfWeekSunday(ref)
-    const m0 = startOfMonth(ref)
-    const m1 = endOfMonth(ref)
   
-    let sumDay = 0, sumWeek = 0, sumMonth = 0
+    const refMonth = new Date(
+      monthRefDate.getFullYear(),
+      monthRefDate.getMonth(),
+      1, 0,0,0,0
+    )
+    const m0 = startOfMonth(refMonth)
+    const m1 = endOfMonth(refMonth)
+  
+    let sumDay = 0
+    let sumMonth = 0
   
     for (const r of rows){
       const dt = ymdToDateLocal(r.date)
       const price = Number(cById[r.client_id]?.service_value) || 0
   
       if (dt.getTime() === d0.getTime()) sumDay += price
-      if (dt >= w0 && dt <= w1) sumWeek += price
       if (dt >= m0 && dt <= m1) sumMonth += price
     }
   
-    return { sumDay, sumWeek, sumMonth, d0, w0, w1, m0, m1 }
+    return { sumDay, sumMonth, d0, m0, m1 }
   }
-
+  
   function setTotalsUI(t){
-    const $ = s => document.querySelector(s)
     $('#totalDay').textContent = money(t.sumDay)
     $('#totalMonth').textContent = money(t.sumMonth)
   
     $('#totalDayHint').textContent = fmtYmd(t.d0)
     $('#totalMonthHint').textContent = `${fmtYmd(t.m0)} a ${fmtYmd(t.m1)}`
   }
+  
   
 
 
@@ -362,7 +365,8 @@ async function init() {
           
           datesSet: () => {
             if (!state.refDayYmd) state.refDayYmd = ymdLocal(new Date())
-            setTotalsUI(calcTotals(state.schedules || [], state.refDayYmd))
+            const monthRef = calendar.getDate()
+            setTotalsUI(calcTotals(state.schedules || [], state.refDayYmd, monthRef))
           },
           
           events: async (info, success, failure) => {
@@ -376,6 +380,11 @@ async function init() {
               state.visibleStart = info.start
               state.visibleEnd = info.end
           
+              if (!state.refDayYmd) state.refDayYmd = ymdLocal(new Date())
+          
+              const monthRef = calendar.getDate()
+              setTotalsUI(calcTotals(rows, state.refDayYmd, monthRef))
+          
               const weeks = calcWeeklyBuckets(rows, info.start, info.end)
               renderWeeksList(weeks)
           
@@ -385,6 +394,7 @@ async function init() {
               failure(e)
             }
           }
+          
 
           
     })
