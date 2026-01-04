@@ -166,3 +166,41 @@ button.danger {
         grid-template-columns: 1fr
     }
 }
+
+.totalsbar{
+    max-width: var(--max);
+    margin: 12px auto 0 auto;
+    padding: 0 var(--gap);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  
+  .totalcard{
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+  
+  .totalcard .label{
+    font-size: 12px;
+    color: #555;
+  }
+  
+  .totalcard .value{
+    font-size: 18px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+  
+  .totalcard .hint{
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+  
+  @media (max-width:640px){
+    .totalsbar{ grid-template-columns: 1fr; }
+  }
+  

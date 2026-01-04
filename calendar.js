@@ -9,10 +9,71 @@ const fmtYmd = d => {
     const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0')
     return `${y}-${m}-${day}`
 }
+
+function ymdToDateLocal(ymd){
+    const [y,m,d] = ymd.split('-').map(Number)
+    return new Date(y, m-1, d, 0,0,0,0)
+  }
+  
+  function startOfWeekMonday(d){
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0,0,0,0)
+    const day = x.getDay() || 7
+    x.setDate(x.getDate() - (day - 1))
+    return x
+  }
+  
+  function endOfWeekSunday(d){
+    const s = startOfWeekMonday(d)
+    const e = new Date(s)
+    e.setDate(e.getDate() + 6)
+    return e
+  }
+  
+  function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1, 0,0,0,0) }
+  function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0, 0,0,0,0) }
+  
+  function calcTotals(rows, refDayYmd){
+    const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
+    const ref = ymdToDateLocal(refDayYmd)
+  
+    const d0 = ymdToDateLocal(refDayYmd)
+    const w0 = startOfWeekMonday(ref)
+    const w1 = endOfWeekSunday(ref)
+    const m0 = startOfMonth(ref)
+    const m1 = endOfMonth(ref)
+  
+    let sumDay = 0, sumWeek = 0, sumMonth = 0
+  
+    for (const r of rows){
+      const dt = ymdToDateLocal(r.date)
+      const price = Number(cById[r.client_id]?.service_value) || 0
+  
+      if (dt.getTime() === d0.getTime()) sumDay += price
+      if (dt >= w0 && dt <= w1) sumWeek += price
+      if (dt >= m0 && dt <= m1) sumMonth += price
+    }
+  
+    return { sumDay, sumWeek, sumMonth, d0, w0, w1, m0, m1 }
+  }
+  
+  function setTotalsUI(t){
+    const $ = s => document.querySelector(s)
+    $('#totalDay').textContent = money(t.sumDay)
+    $('#totalWeek').textContent = money(t.sumWeek)
+    $('#totalMonth').textContent = money(t.sumMonth)
+  
+    $('#totalDayHint').textContent = fmtYmd(t.d0)
+    $('#totalWeekHint').textContent = `${fmtYmd(t.w0)} a ${fmtYmd(t.w1)}`
+    $('#totalMonthHint').textContent = `${fmtYmd(t.m0)} a ${fmtYmd(t.m1)}`
+  }
+  
+
 function uid() { return Math.random().toString(36).slice(2, 10) }
 
 // estado
-const state = { workers: [], clients: [], colorByWorker: {} }
+
+const state = { workers: [], clients: [], colorByWorker: {}, schedules: [], refDayYmd: null }
+
 function buildWorkerColors() {
     // paleta simple
     const palette = ['#2563eb', '#16a34a', '#f59e0b', '#db2777', '#059669', '#7c3aed', '#ea580c', '#0ea5e9', '#84cc16', '#ef4444']
@@ -26,11 +87,18 @@ async function fetchWorkers() {
     if (error) { console.warn('workers', error); return [] }
     return data || []
 }
+
 async function fetchClients() {
-    const { data, error } = await supa.from('clients').select('id,name').order('name')
+    const { data, error } = await supa
+      .from('clients')
+      .select('id,name,service_value')
+      .order('name')
+  
     if (error) { console.warn('clients', error); return [] }
     return data || []
-}
+  }
+  
+
 async function fetchSchedulesRange(startYmd, endYmd) {
     const { data, error } = await supa
         .from('schedules')
@@ -68,7 +136,15 @@ function fillSelects() {
 }
 
 
-function schedulesToEvents(rows) {
+function money(v){
+    const n = Number(v)
+    if (!Number.isFinite(n)) return '$0'
+    return n.toLocaleString('en-US', { style:'currency', currency:'USD' })
+  }
+  
+
+
+/* function schedulesToEvents(rows) {
     return rows.map(r => {
         const clientName = state.clients.find(c => c.id === r.client_id)?.name || 'Cliente'
         const color = state.colorByWorker[r.worker_id] || '#64748b'
@@ -82,7 +158,29 @@ function schedulesToEvents(rows) {
             extendedProps: { sched: r, workerId: r.worker_id }
         }
     })
-}
+} */
+
+function schedulesToEvents(rows) {
+    const cById = Object.fromEntries(state.clients.map(c => [c.id, c]))
+  
+    return rows.map(r => {
+      const c = cById[r.client_id]
+      const clientName = c?.name || 'Cliente'
+      const price = money(c?.service_value)
+  
+      const color = state.colorByWorker[r.worker_id] || '#64748b'
+      return {
+        id: r.id,
+        title: `${clientName} ${price}`,
+        start: r.date,
+        allDay: true,
+        backgroundColor: color,
+        borderColor: color,
+        extendedProps: { sched: r }
+      }
+    })
+  }
+  
 
 
 // Modal helpers
@@ -176,16 +274,33 @@ async function init() {
         navLinks: false,  // desactiva navegación
         locale: 'es',
         displayEventTime: false,
-        dateClick: (info) => openDialog('create', info, null),
-        eventClick: (info) => openDialog('edit', null, info),
-        events: async (info, success, failure) => {
+        dateClick: (info) => {
+            state.refDayYmd = info.dateStr
+            setTotalsUI(calcTotals(state.schedules || [], state.refDayYmd))
+            openDialog('create', info, null)
+          },
+          
+          eventClick: (info) => openDialog('edit', null, info),
+          
+          datesSet: () => {
+            if (!state.refDayYmd) state.refDayYmd = ymdLocal(new Date())
+            setTotalsUI(calcTotals(state.schedules || [], state.refDayYmd))
+          },
+          
+          events: async (info, success, failure) => {
             try {
-                const startYmd = fmtYmd(info.start)
-                const endYmd = fmtYmd(info.end)
-                const rows = await fetchSchedulesRange(startYmd, endYmd)
-                success(schedulesToEvents(rows))
+              const startYmd = fmtYmd(info.start)
+              const endYmd = fmtYmd(info.end)
+              const rows = await fetchSchedulesRange(startYmd, endYmd)
+          
+              state.schedules = rows
+              if (!state.refDayYmd) state.refDayYmd = ymdLocal(new Date())
+              setTotalsUI(calcTotals(rows, state.refDayYmd))
+          
+              success(schedulesToEvents(rows))
             } catch (e) { console.error(e); failure(e) }
-        }
+          }
+          
     })
     calendar.render()
 }
