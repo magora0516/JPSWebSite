@@ -344,6 +344,7 @@ async function init() {
 
     calendar = new FullCalendar.Calendar(el, {
         initialView: 'dayGridMonth',
+        firstDay: 1,
         headerToolbar: { left: 'prev', center: 'title', right: 'next' },
         height: 'auto',
         selectable: true,
